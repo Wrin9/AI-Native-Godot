@@ -1,0 +1,1930 @@
+{
+  "add_animation_track": {
+    "type": "object",
+    "properties": {
+      "animation_player_path": {
+        "type": "string"
+      },
+      "animation_name": {
+        "type": "string"
+      },
+      "library_name": {
+        "type": "string"
+      },
+      "track_type": {
+        "type": "string"
+      },
+      "path": {
+        "type": "string"
+      },
+      "keys": {
+        "type": "array"
+      }
+    },
+    "required": [
+      "animation_name"
+    ]
+  },
+  "add_input_action": {
+    "type": "object",
+    "properties": {
+      "action": {
+        "type": "string"
+      },
+      "deadzone": {
+        "type": "number"
+      },
+      "events": {
+        "type": "string"
+      },
+      "save": {
+        "type": "boolean"
+      }
+    },
+    "required": [
+      "action"
+    ]
+  },
+  "add_node_to_group": {
+    "type": "object",
+    "properties": {
+      "node_path": {
+        "type": "string"
+      },
+      "group": {
+        "type": "string"
+      }
+    },
+    "required": []
+  },
+  "add_tile_atlas_source": {
+    "type": "object",
+    "properties": {
+      "tileset_path": {
+        "type": "string"
+      },
+      "texture_path": {
+        "type": "string"
+      },
+      "tile_size_x": {
+        "type": "integer"
+      },
+      "tile_size_y": {
+        "type": "integer"
+      },
+      "separation_x": {
+        "type": "integer"
+      },
+      "separation_y": {
+        "type": "integer"
+      },
+      "margin_x": {
+        "type": "integer"
+      },
+      "margin_y": {
+        "type": "integer"
+      }
+    },
+    "required": [
+      "tileset_path",
+      "texture_path"
+    ]
+  },
+  "analyze_scene_complexity": {
+    "type": "object",
+    "properties": {},
+    "required": []
+  },
+  "assign_material": {
+    "type": "object",
+    "properties": {
+      "target_path": {
+        "type": "string"
+      },
+      "material_path": {
+        "type": "string"
+      },
+      "surface_index": {
+        "type": "integer"
+      }
+    },
+    "required": []
+  },
+  "capture_editor_view": {
+    "type": "object",
+    "properties": {
+      "view": {
+        "type": "string"
+      },
+      "index": {
+        "type": "integer"
+      },
+      "save_to_file": {
+        "type": "boolean"
+      },
+      "save_path": {
+        "type": "number"
+      },
+      "return_data_uri": {
+        "type": "boolean"
+      }
+    },
+    "required": []
+  },
+  "clear_layer": {
+    "type": "object",
+    "properties": {
+      "node_path": {
+        "type": "string"
+      },
+      "layer": {
+        "type": "integer"
+      }
+    },
+    "required": [
+      "node_path"
+    ]
+  },
+  "connect_node_signal": {
+    "type": "object",
+    "properties": {
+      "source_path": {
+        "type": "string"
+      },
+      "target_path": {
+        "type": "string"
+      },
+      "signal_name": {
+        "type": "string"
+      },
+      "method_name": {
+        "type": "string"
+      },
+      "flags": {
+        "type": "integer"
+      }
+    },
+    "required": []
+  },
+  "copy_file": {
+    "type": "object",
+    "properties": {
+      "from_path": {
+        "type": "string"
+      },
+      "to_path": {
+        "type": "string"
+      }
+    },
+    "required": []
+  },
+  "create_animation_clip": {
+    "type": "object",
+    "properties": {
+      "animation_player_path": {
+        "type": "string"
+      },
+      "animation_name": {
+        "type": "string"
+      },
+      "library_name": {
+        "type": "string"
+      },
+      "length": {
+        "type": "number"
+      },
+      "loop_mode": {
+        "type": "string"
+      },
+      "step": {
+        "type": "number"
+      },
+      "set_current": {
+        "type": "boolean"
+      }
+    },
+    "required": [
+      "animation_name"
+    ]
+  },
+  "create_animation_player": {
+    "type": "object",
+    "properties": {
+      "parent_path": {
+        "type": "string"
+      },
+      "name": {
+        "type": "string"
+      },
+      "select_new_node": {
+        "type": "boolean"
+      }
+    },
+    "required": []
+  },
+  "create_audio_player": {
+    "type": "object",
+    "properties": {
+      "parent_path": {
+        "type": "string"
+      },
+      "name": {
+        "type": "string"
+      },
+      "stream_path": {
+        "type": "string"
+      },
+      "autoplay": {
+        "type": "boolean"
+      }
+    },
+    "required": []
+  },
+  "create_button": {
+    "type": "object",
+    "properties": {},
+    "required": []
+  },
+  "create_camera_3d": {
+    "type": "object",
+    "properties": {
+      "parent_path": {
+        "type": "string"
+      },
+      "name": {
+        "type": "string"
+      },
+      "fov": {
+        "type": "number"
+      },
+      "near": {
+        "type": "number"
+      },
+      "far": {
+        "type": "number"
+      }
+    },
+    "required": []
+  },
+  "create_collision_shape": {
+    "type": "object",
+    "properties": {
+      "parent_path": {
+        "type": "string"
+      },
+      "name": {
+        "type": "string"
+      },
+      "shape_type": {
+        "type": "string"
+      },
+      "width": {
+        "type": "number"
+      },
+      "height": {
+        "type": "number"
+      },
+      "radius": {
+        "type": "number"
+      },
+      "from": {
+        "type": "string"
+      },
+      "to": {
+        "type": "string"
+      },
+      "disabled": {
+        "type": "boolean"
+      }
+    },
+    "required": []
+  },
+  "create_container": {
+    "type": "object",
+    "properties": {
+      "container_type": {
+        "type": "string"
+      }
+    },
+    "required": [
+      "container_type"
+    ]
+  },
+  "create_control": {
+    "type": "object",
+    "properties": {
+      "control_type": {
+        "type": "string"
+      },
+      "parent_path": {
+        "type": "string"
+      },
+      "name": {
+        "type": "string"
+      },
+      "select_new_node": {
+        "type": "boolean"
+      }
+    },
+    "required": [
+      "control_type"
+    ]
+  },
+  "create_label": {
+    "type": "object",
+    "properties": {},
+    "required": []
+  },
+  "create_light": {
+    "type": "object",
+    "properties": {
+      "parent_path": {
+        "type": "string"
+      },
+      "name": {
+        "type": "string"
+      },
+      "light_type": {
+        "type": "string"
+      },
+      "color": {
+        "type": "string"
+      },
+      "energy": {
+        "type": "number"
+      }
+    },
+    "required": []
+  },
+  "create_material": {
+    "type": "object",
+    "properties": {
+      "path": {
+        "type": "string"
+      },
+      "material_type": {
+        "type": "string"
+      },
+      "properties": {
+        "type": "string"
+      }
+    },
+    "required": [
+      "path"
+    ]
+  },
+  "create_mesh_instance": {
+    "type": "object",
+    "properties": {
+      "parent_path": {
+        "type": "string"
+      },
+      "name": {
+        "type": "string"
+      },
+      "mesh_path": {
+        "type": "string"
+      }
+    },
+    "required": []
+  },
+  "create_navigation_region": {
+    "type": "object",
+    "properties": {
+      "parent_path": {
+        "type": "string"
+      },
+      "name": {
+        "type": "string"
+      },
+      "vertices": {
+        "type": "string"
+      },
+      "polygons": {
+        "type": "string"
+      }
+    },
+    "required": []
+  },
+  "create_new_scene": {
+    "type": "object",
+    "properties": {
+      "path": {
+        "type": "string"
+      },
+      "root_type": {
+        "type": "string"
+      },
+      "root_name": {
+        "type": "string"
+      },
+      "script_path": {
+        "type": "string"
+      },
+      "open_after": {
+        "type": "boolean"
+      }
+    },
+    "required": [
+      "path"
+    ]
+  },
+  "create_node": {
+    "type": "object",
+    "properties": {
+      "node_type": {
+        "type": "string"
+      },
+      "parent_path": {
+        "type": "string"
+      },
+      "name": {
+        "type": "string"
+      },
+      "select_new_node": {
+        "type": "boolean"
+      }
+    },
+    "required": [
+      "node_type"
+    ]
+  },
+  "create_packed_scene_from_node": {
+    "type": "object",
+    "properties": {
+      "node_path": {
+        "type": "string"
+      },
+      "path": {
+        "type": "string"
+      },
+      "select_file": {
+        "type": "boolean"
+      }
+    },
+    "required": [
+      "path"
+    ]
+  },
+  "create_panel": {
+    "type": "object",
+    "properties": {},
+    "required": []
+  },
+  "create_particles": {
+    "type": "object",
+    "properties": {
+      "parent_path": {
+        "type": "string"
+      },
+      "name": {
+        "type": "string"
+      },
+      "particle_type": {
+        "type": "string"
+      },
+      "amount": {
+        "type": "integer"
+      }
+    },
+    "required": []
+  },
+  "create_ray_cast": {
+    "type": "object",
+    "properties": {
+      "parent_path": {
+        "type": "string"
+      },
+      "name": {
+        "type": "string"
+      },
+      "target_position": {
+        "type": "string"
+      }
+    },
+    "required": []
+  },
+  "create_script": {
+    "type": "object",
+    "properties": {
+      "path": {
+        "type": "string"
+      },
+      "language": {
+        "type": "string"
+      },
+      "class_name": {
+        "type": "string"
+      },
+      "namespace": {
+        "type": "string"
+      },
+      "extends": {
+        "type": "string"
+      },
+      "body": {
+        "type": "string"
+      },
+      "tool": {
+        "type": "boolean"
+      },
+      "partial": {
+        "type": "boolean"
+      },
+      "include_system": {
+        "type": "boolean"
+      },
+      "open_in_editor": {
+        "type": "boolean"
+      }
+    },
+    "required": [
+      "path"
+    ]
+  },
+  "create_shader": {
+    "type": "object",
+    "properties": {
+      "path": {
+        "type": "string"
+      },
+      "shader_type": {
+        "type": "string"
+      },
+      "code": {
+        "type": "string"
+      }
+    },
+    "required": [
+      "path"
+    ]
+  },
+  "create_texture_rect": {
+    "type": "object",
+    "properties": {},
+    "required": []
+  },
+  "create_tile_map": {
+    "type": "object",
+    "properties": {
+      "parent_path": {
+        "type": "string"
+      },
+      "name": {
+        "type": "string"
+      },
+      "tileset_path": {
+        "type": "string"
+      },
+      "layers": {
+        "type": "integer"
+      }
+    },
+    "required": []
+  },
+  "create_tile_set": {
+    "type": "object",
+    "properties": {
+      "path": {
+        "type": "string"
+      },
+      "tile_size_x": {
+        "type": "integer"
+      },
+      "tile_size_y": {
+        "type": "integer"
+      }
+    },
+    "required": [
+      "path"
+    ]
+  },
+  "create_ui_root": {
+    "type": "object",
+    "properties": {
+      "kind": {
+        "type": "string"
+      },
+      "parent_path": {
+        "type": "string"
+      },
+      "name": {
+        "type": "string"
+      },
+      "control_name": {
+        "type": "string"
+      },
+      "layout_preset": {
+        "type": "string"
+      },
+      "select_new_node": {
+        "type": "boolean"
+      }
+    },
+    "required": []
+  },
+  "create_viewport": {
+    "type": "object",
+    "properties": {
+      "parent_path": {
+        "type": "string"
+      },
+      "name": {
+        "type": "string"
+      },
+      "size_w": {
+        "type": "integer"
+      },
+      "size_h": {
+        "type": "integer"
+      }
+    },
+    "required": []
+  },
+  "delete_file": {
+    "type": "object",
+    "properties": {
+      "path": {
+        "type": "string"
+      }
+    },
+    "required": [
+      "path"
+    ]
+  },
+  "disconnect_node_signal": {
+    "type": "object",
+    "properties": {
+      "source_path": {
+        "type": "string"
+      },
+      "signal_name": {
+        "type": "string"
+      },
+      "target_path": {
+        "type": "string"
+      },
+      "method_name": {
+        "type": "string"
+      }
+    },
+    "required": []
+  },
+  "duplicate_node": {
+    "type": "object",
+    "properties": {
+      "node_path": {
+        "type": "string"
+      },
+      "new_name": {
+        "type": "string"
+      },
+      "select_new_node": {
+        "type": "boolean"
+      }
+    },
+    "required": [
+      "node_path"
+    ]
+  },
+  "edit_script": {
+    "type": "object",
+    "properties": {
+      "path": {
+        "type": "string"
+      },
+      "content": {
+        "type": "string"
+      }
+    },
+    "required": [
+      "path"
+    ]
+  },
+  "enter_play_mode": {
+    "type": "object",
+    "properties": {
+      "mode": {
+        "type": "string"
+      },
+      "scene_path": {
+        "type": "string"
+      }
+    },
+    "required": [
+      "scene_path"
+    ]
+  },
+  "exit_play_mode": {
+    "type": "object",
+    "properties": {},
+    "required": []
+  },
+  "export_project": {
+    "type": "object",
+    "properties": {
+      "preset_name": {
+        "type": "string"
+      },
+      "export_path": {
+        "type": "string"
+      },
+      "debug": {
+        "type": "boolean"
+      }
+    },
+    "required": []
+  },
+  "file_exists": {
+    "type": "object",
+    "properties": {
+      "path": {
+        "type": "string"
+      }
+    },
+    "required": [
+      "path"
+    ]
+  },
+  "find_nodes": {
+    "type": "object",
+    "properties": {
+      "name_contains": {
+        "type": "string"
+      },
+      "class_name": {
+        "type": "string"
+      },
+      "script_path": {
+        "type": "string"
+      },
+      "max_results": {
+        "type": "integer"
+      }
+    },
+    "required": []
+  },
+  "find_usages": {
+    "type": "object",
+    "properties": {
+      "symbol": {
+        "type": "string"
+      },
+      "path": {
+        "type": "string"
+      },
+      "case_sensitive": {
+        "type": "boolean"
+      },
+      "max_results": {
+        "type": "integer"
+      }
+    },
+    "required": [
+      "symbol"
+    ]
+  },
+  "get_console_logs": {
+    "type": "object",
+    "properties": {
+      "max_lines": {
+        "type": "integer"
+      },
+      "include_rotated": {
+        "type": "boolean"
+      },
+      "filter": {
+        "type": "string"
+      },
+      "severity": {
+        "type": "string"
+      }
+    },
+    "required": []
+  },
+  "get_editor_state": {
+    "type": "object",
+    "properties": {},
+    "required": []
+  },
+  "get_input_action": {
+    "type": "object",
+    "properties": {
+      "action": {
+        "type": "string"
+      }
+    },
+    "required": [
+      "action"
+    ]
+  },
+  "get_node_connections": {
+    "type": "object",
+    "properties": {
+      "node_path": {
+        "type": "string"
+      }
+    },
+    "required": [
+      "node_path"
+    ]
+  },
+  "get_node_info": {
+    "type": "object",
+    "properties": {
+      "node_path": {
+        "type": "string"
+      }
+    },
+    "required": [
+      "node_path"
+    ]
+  },
+  "get_packed_scene_info": {
+    "type": "object",
+    "properties": {
+      "path": {
+        "type": "string"
+      },
+      "max_depth": {
+        "type": "integer"
+      }
+    },
+    "required": [
+      "path"
+    ]
+  },
+  "get_performance_snapshot": {
+    "type": "object",
+    "properties": {},
+    "required": []
+  },
+  "get_play_state": {
+    "type": "object",
+    "properties": {},
+    "required": []
+  },
+  "get_project_info": {
+    "type": "object",
+    "properties": {},
+    "required": []
+  },
+  "get_project_setting": {
+    "type": "object",
+    "properties": {
+      "key": {
+        "type": "string"
+      }
+    },
+    "required": [
+      "key"
+    ]
+  },
+  "get_resource_info": {
+    "type": "object",
+    "properties": {
+      "path": {
+        "type": "string"
+      }
+    },
+    "required": []
+  },
+  "get_scene_info": {
+    "type": "object",
+    "properties": {},
+    "required": []
+  },
+  "get_scene_tree": {
+    "type": "object",
+    "properties": {},
+    "required": []
+  },
+  "get_script_errors": {
+    "type": "object",
+    "properties": {
+      "path": {
+        "type": "string"
+      },
+      "max_files": {
+        "type": "integer"
+      }
+    },
+    "required": []
+  },
+  "get_selection": {
+    "type": "object",
+    "properties": {},
+    "required": []
+  },
+  "get_tile_map_data": {
+    "type": "object",
+    "properties": {
+      "node_path": {
+        "type": "string"
+      },
+      "layer": {
+        "type": "integer"
+      }
+    },
+    "required": [
+      "node_path"
+    ]
+  },
+  "get_time_scale": {
+    "type": "object",
+    "properties": {},
+    "required": []
+  },
+  "import_resource": {
+    "type": "object",
+    "properties": {
+      "source_path": {
+        "type": "string"
+      },
+      "dest_path": {
+        "type": "string"
+      }
+    },
+    "required": []
+  },
+  "instantiate_scene": {
+    "type": "object",
+    "properties": {
+      "scene_path": {
+        "type": "string"
+      },
+      "parent_path": {
+        "type": "string"
+      },
+      "name": {
+        "type": "string"
+      },
+      "select_new_node": {
+        "type": "boolean"
+      }
+    },
+    "required": [
+      "scene_path"
+    ]
+  },
+  "list_addons": {
+    "type": "object",
+    "properties": {},
+    "required": []
+  },
+  "list_animations": {
+    "type": "object",
+    "properties": {
+      "animation_player_path": {
+        "type": "string"
+      }
+    },
+    "required": []
+  },
+  "list_autoloads": {
+    "type": "object",
+    "properties": {},
+    "required": []
+  },
+  "list_files": {
+    "type": "object",
+    "properties": {
+      "path": {
+        "type": "string"
+      },
+      "recursive": {
+        "type": "boolean"
+      },
+      "include_hidden": {
+        "type": "boolean"
+      },
+      "max_entries": {
+        "type": "integer"
+      }
+    },
+    "required": []
+  },
+  "list_groups": {
+    "type": "object",
+    "properties": {},
+    "required": []
+  },
+  "list_input_actions": {
+    "type": "object",
+    "properties": {},
+    "required": []
+  },
+  "list_node_methods": {
+    "type": "object",
+    "properties": {
+      "node_path": {
+        "type": "string"
+      },
+      "include_private": {
+        "type": "boolean"
+      }
+    },
+    "required": [
+      "node_path"
+    ]
+  },
+  "list_node_properties": {
+    "type": "object",
+    "properties": {
+      "node_path": {
+        "type": "string"
+      },
+      "include_usage": {
+        "type": "boolean"
+      }
+    },
+    "required": [
+      "node_path"
+    ]
+  },
+  "list_node_signals": {
+    "type": "object",
+    "properties": {
+      "node_path": {
+        "type": "string"
+      }
+    },
+    "required": [
+      "node_path"
+    ]
+  },
+  "list_open_scenes": {
+    "type": "object",
+    "properties": {},
+    "required": []
+  },
+  "list_project_features": {
+    "type": "object",
+    "properties": {},
+    "required": []
+  },
+  "list_project_settings": {
+    "type": "object",
+    "properties": {
+      "prefix": {
+        "type": "string"
+      },
+      "include_internal": {
+        "type": "boolean"
+      },
+      "max_results": {
+        "type": "integer"
+      }
+    },
+    "required": []
+  },
+  "list_resources": {
+    "type": "object",
+    "properties": {
+      "path": {
+        "type": "string"
+      },
+      "type_filter": {
+        "type": "string"
+      }
+    },
+    "required": []
+  },
+  "list_scenes": {
+    "type": "object",
+    "properties": {
+      "path": {
+        "type": "string"
+      },
+      "max_entries": {
+        "type": "integer"
+      },
+      "recursive": {
+        "type": "boolean"
+      }
+    },
+    "required": []
+  },
+  "list_scripts": {
+    "type": "object",
+    "properties": {
+      "path": {
+        "type": "string"
+      },
+      "max_entries": {
+        "type": "integer"
+      },
+      "recursive": {
+        "type": "boolean"
+      },
+      "language": {
+        "type": "string"
+      }
+    },
+    "required": []
+  },
+  "map_project": {
+    "type": "object",
+    "properties": {
+      "format": {
+        "type": "string"
+      },
+      "include_scripts": {
+        "type": "boolean"
+      },
+      "max_files": {
+        "type": "integer"
+      }
+    },
+    "required": []
+  },
+  "move_file": {
+    "type": "object",
+    "properties": {
+      "from_path": {
+        "type": "string"
+      },
+      "to_path": {
+        "type": "string"
+      }
+    },
+    "required": []
+  },
+  "open_scene": {
+    "type": "object",
+    "properties": {
+      "path": {
+        "type": "string"
+      },
+      "set_inherited": {
+        "type": "boolean"
+      }
+    },
+    "required": [
+      "path"
+    ]
+  },
+  "open_script": {
+    "type": "object",
+    "properties": {
+      "path": {
+        "type": "string"
+      },
+      "line": {
+        "type": "integer"
+      },
+      "column": {
+        "type": "integer"
+      }
+    },
+    "required": [
+      "path"
+    ]
+  },
+  "patch_script": {
+    "type": "object",
+    "properties": {
+      "path": {
+        "type": "string"
+      },
+      "find": {
+        "type": "string"
+      },
+      "replace": {
+        "type": "string"
+      },
+      "prepend": {
+        "type": "string"
+      },
+      "append": {
+        "type": "string"
+      }
+    },
+    "required": [
+      "path"
+    ]
+  },
+  "play_animation": {
+    "type": "object",
+    "properties": {
+      "animation_player_path": {
+        "type": "string"
+      },
+      "animation_name": {
+        "type": "string"
+      },
+      "custom_blend": {
+        "type": "number"
+      },
+      "custom_speed": {
+        "type": "number"
+      },
+      "from_end": {
+        "type": "boolean"
+      }
+    },
+    "required": [
+      "animation_name"
+    ]
+  },
+  "play_main_scene": {
+    "type": "object",
+    "properties": {},
+    "required": []
+  },
+  "read_file": {
+    "type": "object",
+    "properties": {
+      "path": {
+        "type": "string"
+      },
+      "max_chars": {
+        "type": "integer"
+      }
+    },
+    "required": [
+      "path"
+    ]
+  },
+  "redo": {
+    "type": "object",
+    "properties": {},
+    "required": []
+  },
+  "remove_autoload": {
+    "type": "object",
+    "properties": {
+      "name": {
+        "type": "string"
+      },
+      "save": {
+        "type": "boolean"
+      }
+    },
+    "required": [
+      "name"
+    ]
+  },
+  "remove_input_action": {
+    "type": "object",
+    "properties": {
+      "action": {
+        "type": "string"
+      },
+      "save": {
+        "type": "boolean"
+      }
+    },
+    "required": [
+      "action"
+    ]
+  },
+  "remove_node": {
+    "type": "object",
+    "properties": {
+      "node_path": {
+        "type": "string"
+      }
+    },
+    "required": [
+      "node_path"
+    ]
+  },
+  "remove_node_from_group": {
+    "type": "object",
+    "properties": {
+      "node_path": {
+        "type": "string"
+      },
+      "group": {
+        "type": "string"
+      }
+    },
+    "required": []
+  },
+  "rename_node": {
+    "type": "object",
+    "properties": {
+      "node_path": {
+        "type": "string"
+      },
+      "new_name": {
+        "type": "string"
+      },
+      "undoable": {
+        "type": "boolean"
+      }
+    },
+    "required": []
+  },
+  "reparent_node": {
+    "type": "object",
+    "properties": {
+      "node_path": {
+        "type": "string"
+      },
+      "new_parent_path": {
+        "type": "string"
+      },
+      "keep_global_transform": {
+        "type": "boolean"
+      }
+    },
+    "required": []
+  },
+  "request_script_reload": {
+    "type": "object",
+    "properties": {
+      "path": {
+        "type": "string"
+      }
+    },
+    "required": []
+  },
+  "run_code": {
+    "type": "object",
+    "properties": {
+      "code": {
+        "type": "string"
+      }
+    },
+    "required": [
+      "code"
+    ]
+  },
+  "save_scene": {
+    "type": "object",
+    "properties": {},
+    "required": []
+  },
+  "save_scene_as": {
+    "type": "object",
+    "properties": {
+      "path": {
+        "type": "string"
+      },
+      "with_preview": {
+        "type": "boolean"
+      }
+    },
+    "required": [
+      "path"
+    ]
+  },
+  "search_files": {
+    "type": "object",
+    "properties": {
+      "path": {
+        "type": "string"
+      },
+      "pattern": {
+        "type": "string"
+      },
+      "mode": {
+        "type": "string"
+      },
+      "recursive": {
+        "type": "boolean"
+      },
+      "max_results": {
+        "type": "integer"
+      }
+    },
+    "required": [
+      "pattern"
+    ]
+  },
+  "select_node": {
+    "type": "object",
+    "properties": {
+      "node_path": {
+        "type": "string"
+      }
+    },
+    "required": [
+      "node_path"
+    ]
+  },
+  "set_addon_enabled": {
+    "type": "object",
+    "properties": {
+      "addon": {
+        "type": "string"
+      },
+      "enabled": {
+        "type": "string"
+      }
+    },
+    "required": [
+      "addon",
+      "enabled"
+    ]
+  },
+  "set_autoload": {
+    "type": "object",
+    "properties": {
+      "name": {
+        "type": "string"
+      },
+      "path": {
+        "type": "string"
+      },
+      "value": {
+        "type": "string"
+      },
+      "save": {
+        "type": "boolean"
+      }
+    },
+    "required": []
+  },
+  "set_cell": {
+    "type": "object",
+    "properties": {
+      "node_path": {
+        "type": "string"
+      },
+      "layer": {
+        "type": "integer"
+      },
+      "coords": {
+        "type": "string"
+      },
+      "source_id": {
+        "type": "integer"
+      },
+      "atlas_coords": {
+        "type": "string"
+      },
+      "alternative_tile": {
+        "type": "integer"
+      }
+    },
+    "required": [
+      "node_path"
+    ]
+  },
+  "set_cells_terrain_connect": {
+    "type": "object",
+    "properties": {
+      "node_path": {
+        "type": "string"
+      },
+      "layer": {
+        "type": "integer"
+      },
+      "source_id": {
+        "type": "integer"
+      },
+      "terrain_set": {
+        "type": "integer"
+      },
+      "terrain": {
+        "type": "integer"
+      },
+      "cells": {
+        "type": "string"
+      }
+    },
+    "required": [
+      "node_path"
+    ]
+  },
+  "set_collision_shape_data": {
+    "type": "object",
+    "properties": {
+      "node_path": {
+        "type": "string"
+      },
+      "shape_type": {
+        "type": "string"
+      },
+      "width": {
+        "type": "number"
+      },
+      "height": {
+        "type": "number"
+      },
+      "radius": {
+        "type": "number"
+      }
+    },
+    "required": [
+      "node_path"
+    ]
+  },
+  "set_control_layout": {
+    "type": "object",
+    "properties": {
+      "node_path": {
+        "type": "string"
+      },
+      "undoable": {
+        "type": "boolean"
+      }
+    },
+    "required": []
+  },
+  "set_control_size_flags": {
+    "type": "object",
+    "properties": {
+      "node_path": {
+        "type": "string"
+      },
+      "undoable": {
+        "type": "boolean"
+      }
+    },
+    "required": []
+  },
+  "set_control_text": {
+    "type": "object",
+    "properties": {
+      "node_path": {
+        "type": "string"
+      },
+      "text": {
+        "type": "string"
+      },
+      "property": {
+        "type": "string"
+      },
+      "undoable": {
+        "type": "boolean"
+      }
+    },
+    "required": []
+  },
+  "set_control_theme_override": {
+    "type": "object",
+    "properties": {
+      "node_path": {
+        "type": "string"
+      },
+      "override_type": {
+        "type": "string"
+      },
+      "name": {
+        "type": "string"
+      },
+      "value": {
+        "type": "integer"
+      },
+      "resource_path": {
+        "type": "string"
+      }
+    },
+    "required": []
+  },
+  "set_editor_setting": {
+    "type": "object",
+    "properties": {
+      "key": {
+        "type": "string"
+      },
+      "value": {
+        "type": "string"
+      }
+    },
+    "required": []
+  },
+  "set_environment": {
+    "type": "object",
+    "properties": {
+      "parent_path": {
+        "type": "string"
+      },
+      "name": {
+        "type": "string"
+      },
+      "sky_color": {
+        "type": "number"
+      },
+      "ambient_color": {
+        "type": "number"
+      }
+    },
+    "required": []
+  },
+  "set_export_preset": {
+    "type": "object",
+    "properties": {
+      "preset_name": {
+        "type": "string"
+      },
+      "platform": {
+        "type": "string"
+      },
+      "export_path": {
+        "type": "string"
+      },
+      "settings": {
+        "type": "string"
+      }
+    },
+    "required": []
+  },
+  "set_node_properties": {
+    "type": "object",
+    "properties": {
+      "node_path": {
+        "type": "string"
+      },
+      "properties": {
+        "type": "string"
+      },
+      "undoable": {
+        "type": "boolean"
+      }
+    },
+    "required": [
+      "node_path"
+    ]
+  },
+  "set_node_property": {
+    "type": "object",
+    "properties": {
+      "node_path": {
+        "type": "string"
+      },
+      "property": {
+        "type": "string"
+      },
+      "value": {
+        "type": "string"
+      },
+      "undoable": {
+        "type": "boolean"
+      }
+    },
+    "required": []
+  },
+  "set_node_script": {
+    "type": "object",
+    "properties": {
+      "node_path": {
+        "type": "string"
+      },
+      "script_path": {
+        "type": "string"
+      }
+    },
+    "required": []
+  },
+  "set_physics_material": {
+    "type": "object",
+    "properties": {
+      "node_path": {
+        "type": "string"
+      }
+    },
+    "required": [
+      "node_path"
+    ]
+  },
+  "set_project_setting": {
+    "type": "object",
+    "properties": {
+      "key": {
+        "type": "string"
+      },
+      "value": {
+        "type": "string"
+      },
+      "save": {
+        "type": "boolean"
+      }
+    },
+    "required": [
+      "key",
+      "value"
+    ]
+  },
+  "set_resource_property": {
+    "type": "object",
+    "properties": {
+      "path": {
+        "type": "string"
+      },
+      "property": {
+        "type": "string"
+      },
+      "value": {
+        "type": "string"
+      }
+    },
+    "required": []
+  },
+  "set_shader_code": {
+    "type": "object",
+    "properties": {
+      "path": {
+        "type": "string"
+      },
+      "code": {
+        "type": "string"
+      }
+    },
+    "required": [
+      "path",
+      "code"
+    ]
+  },
+  "set_shader_param": {
+    "type": "object",
+    "properties": {
+      "node_path": {
+        "type": "string"
+      },
+      "shader_path": {
+        "type": "string"
+      },
+      "param": {
+        "type": "string"
+      },
+      "params": {
+        "type": "string"
+      },
+      "value": {
+        "type": "string"
+      }
+    },
+    "required": [
+      "node_path"
+    ]
+  },
+  "set_tile_set_collision": {
+    "type": "object",
+    "properties": {
+      "tileset_path": {
+        "type": "string"
+      },
+      "source_id": {
+        "type": "integer"
+      },
+      "atlas_coords": {
+        "type": "string"
+      },
+      "physics_layer": {
+        "type": "integer"
+      },
+      "shape_type": {
+        "type": "string"
+      },
+      "points": {
+        "type": "string"
+      },
+      "one_way_collision": {
+        "type": "boolean"
+      }
+    },
+    "required": [
+      "tileset_path"
+    ]
+  },
+  "set_time_scale": {
+    "type": "object",
+    "properties": {
+      "value": {
+        "type": "string"
+      }
+    },
+    "required": [
+      "value"
+    ]
+  },
+  "set_transform_2d": {
+    "type": "object",
+    "properties": {
+      "node_path": {
+        "type": "string"
+      },
+      "undoable": {
+        "type": "boolean"
+      }
+    },
+    "required": [
+      "node_path"
+    ]
+  },
+  "set_transform_3d": {
+    "type": "object",
+    "properties": {
+      "node_path": {
+        "type": "string"
+      },
+      "undoable": {
+        "type": "boolean"
+      }
+    },
+    "required": [
+      "node_path"
+    ]
+  },
+  "simulate_action": {
+    "type": "object",
+    "properties": {
+      "action": {
+        "type": "string"
+      },
+      "mode": {
+        "type": "string"
+      },
+      "strength": {
+        "type": "number"
+      }
+    },
+    "required": [
+      "action"
+    ]
+  },
+  "simulate_input_sequence": {
+    "type": "object",
+    "properties": {
+      "events": {
+        "type": "string"
+      }
+    },
+    "required": []
+  },
+  "simulate_key_event": {
+    "type": "object",
+    "properties": {
+      "mode": {
+        "type": "string"
+      },
+      "key": {
+        "type": "string"
+      },
+      "physical_key": {
+        "type": "string"
+      }
+    },
+    "required": [
+      "physical_key"
+    ]
+  },
+  "simulate_mouse_button": {
+    "type": "object",
+    "properties": {
+      "mode": {
+        "type": "string"
+      },
+      "button": {
+        "type": "string"
+      },
+      "position": {
+        "type": "string"
+      }
+    },
+    "required": []
+  },
+  "simulate_mouse_drag": {
+    "type": "object",
+    "properties": {
+      "from_position": {
+        "type": "string"
+      },
+      "to_position": {
+        "type": "string"
+      },
+      "steps": {
+        "type": "integer"
+      },
+      "button": {
+        "type": "string"
+      }
+    },
+    "required": []
+  },
+  "undo": {
+    "type": "object",
+    "properties": {},
+    "required": []
+  },
+  "validate_script": {
+    "type": "object",
+    "properties": {
+      "path": {
+        "type": "string"
+      }
+    },
+    "required": [
+      "path"
+    ]
+  },
+  "write_file": {
+    "type": "object",
+    "properties": {
+      "path": {
+        "type": "string"
+      },
+      "content": {
+        "type": "string"
+      }
+    },
+    "required": [
+      "path"
+    ]
+  }
+}
