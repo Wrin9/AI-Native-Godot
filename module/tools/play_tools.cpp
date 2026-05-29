@@ -21,6 +21,10 @@
 #include "core/variant/variant.h"
 #include "core/crypto/crypto_core.h"
 
+#include "editor/run/editor_run_bar.h"
+#include "editor/run/editor_run.h"
+#include "servers/display/display_server.h"
+
 // 按键名称映射
 static HashMap<String, Key> _init_key_name_map() {
 	HashMap<String, Key> map;
@@ -57,6 +61,97 @@ static HashMap<String, MouseButton> _init_mouse_button_map() {
 static const HashMap<String, MouseButton> MOUSE_BUTTON_MAP = _init_mouse_button_map();
 
 // ============================================================
+
+// ============================================================
+// 游戏窗口查找（Windows 平台）
+// 在 Play 模式下，游戏运行在独立进程中。
+// 通过 EditorRunBar 获取子进程 PID，再用 EnumWindows 找到窗口句柄。
+// ============================================================
+
+#ifdef WINDOWS_ENABLED
+#define WIN32_LEAN_AND_MEAN
+#define NOMINMAX
+#include <windows.h>
+#undef ERROR
+// 通过窗口类名和标题查找游戏窗口
+// 游戏进程窗口类名与编辑器相同（Godot 窗口），但标题不同
+struct _GameWindowFinder {
+	HWND editor_hwnd;    // 编辑器窗口句柄
+	HWND result_hwnd;    // 找到的游戏窗口
+	DWORD editor_pid;    // 编辑器进程 PID
+};
+
+static BOOL CALLBACK _find_game_window_callback(HWND hwnd, LPARAM lParam) {
+	_GameWindowFinder *finder = (_GameWindowFinder *)lParam;
+	DWORD pid = 0;
+	GetWindowThreadProcessId(hwnd, &pid);
+	
+	// 跳过编辑器进程的窗口
+	if (pid == finder->editor_pid) {
+		return TRUE;
+	}
+	
+	if (!IsWindowVisible(hwnd)) {
+		return TRUE;
+	}
+	
+	// 跳过编辑器窗口本身
+	if (hwnd == finder->editor_hwnd) {
+		return TRUE;
+	}
+	
+	char class_name[256] = {};
+	GetClassNameA(hwnd, class_name, sizeof(class_name));
+	
+	// Godot 窗口类名以 "Godot" 开头（或直接是 GLFW 窗口）
+	// 精确匹配：Godot 4.x 使用 GLFW，类名是项目的窗口标题
+	char title[512] = {};
+	GetWindowTextA(hwnd, title, sizeof(title));
+	
+	// 检查是否是 Godot 游戏窗口（标题通常包含项目名）
+	String title_str = String::utf8(title);
+	String class_str = String::utf8(class_name);
+	
+	// GLFW 窗口类名在 Godot 4.6 中可能是 "Godot_Engine" 或自定义
+	// 检查窗口是否属于另一个进程且可见
+	if (class_str.find("Godot") >= 0 || class_str.find("GLFW") >= 0 ||
+		class_str.find("godot") >= 0 || title_str.length() > 0) {
+		// 额外验证：窗口应该属于不同进程
+		if (pid != finder->editor_pid && pid != 0) {
+			finder->result_hwnd = hwnd;
+			return FALSE; // 找到了
+		}
+	}
+	
+	return TRUE;
+}
+
+static HWND _find_game_window() {
+	EditorRunBar *run_bar = EditorRunBar::get_singleton();
+	if (!run_bar || !run_bar->is_playing()) {
+		return nullptr;
+	}
+	
+	// 获取编辑器主窗口句柄
+	HWND editor_hwnd = (HWND)DisplayServer::get_singleton()->window_get_native_handle(DisplayServer::WINDOW_HANDLE);
+	DWORD editor_pid = GetCurrentProcessId();
+	
+	_GameWindowFinder finder = {};
+	finder.editor_hwnd = editor_hwnd;
+	finder.editor_pid = editor_pid;
+	finder.result_hwnd = nullptr;
+	
+	EnumWindows(_find_game_window_callback, (LPARAM)&finder);
+	return finder.result_hwnd;
+}
+#endif
+
+// 判断是否处于 Play 模式（游戏在独立进程中运行）
+static bool _is_game_playing() {
+	EditorRunBar *run_bar = EditorRunBar::get_singleton();
+	return run_bar && run_bar->is_playing();
+}
+
 void PlayTools::set_editor_plugin(EditorPlugin *p_plugin) {
 	_plugin = p_plugin;
 }
@@ -266,7 +361,51 @@ String PlayTools::simulate_mouse_drag(const Dictionary &p_args) {
 	int steps = CLAMP(int(p_args.get("steps", 8)), 1, 240);
 	int button_index = _to_mouse_button(p_args.get("button", "left"));
 
-	// 按下
+#ifdef WINDOWS_ENABLED
+	// Play 模式：向游戏窗口发送 Win32 鼠标拖拽
+	if (_is_game_playing()) {
+		HWND hwnd = _find_game_window();
+		if (hwnd) {
+			UINT msg_down, msg_up;
+			WPARAM wp_mask = 0;
+			if (button_index == 1) {
+				msg_down = WM_LBUTTONDOWN; msg_up = WM_LBUTTONUP;
+				wp_mask = MK_LBUTTON;
+			} else if (button_index == 2) {
+				msg_down = WM_RBUTTONDOWN; msg_up = WM_RBUTTONUP;
+				wp_mask = MK_RBUTTON;
+			} else {
+				msg_down = WM_MBUTTONDOWN; msg_up = WM_MBUTTONUP;
+				wp_mask = MK_MBUTTON;
+			}
+			// 按下
+			PostMessage(hwnd, msg_down, 0, MAKELPARAM((WORD)from_position.x, (WORD)from_position.y));
+			// 拖拽步骤
+			for (int step = 1; step <= steps; step++) {
+				float weight = (float)step / (float)steps;
+				Vector2 current = from_position.lerp(to_position, weight);
+				PostMessage(hwnd, WM_MOUSEMOVE, wp_mask, MAKELPARAM((WORD)current.x, (WORD)current.y));
+			}
+			// 释放
+			PostMessage(hwnd, msg_up, 0, MAKELPARAM((WORD)to_position.x, (WORD)to_position.y));
+			
+			Dictionary result;
+			result["mode"] = "drag";
+			result["target"] = "game_window";
+			result["steps"] = steps;
+			result["button_index"] = button_index;
+			Dictionary from_pos;
+			from_pos["x"] = from_position.x; from_pos["y"] = from_position.y;
+			result["from_position"] = from_pos;
+			Dictionary to_pos;
+			to_pos["x"] = to_position.x; to_pos["y"] = to_position.y;
+			result["to_position"] = to_pos;
+			return JSON::stringify(result, "	");
+		}
+	}
+#endif
+
+	// 编辑器模式：使用 Input 单例
 	Ref<InputEventMouseButton> press_event;
 	press_event.instantiate();
 	press_event->set_button_index((MouseButton)button_index);
@@ -275,7 +414,6 @@ String PlayTools::simulate_mouse_drag(const Dictionary &p_args) {
 	press_event->set_pressed(true);
 	Input::get_singleton()->parse_input_event(press_event);
 
-	// 拖拽步骤
 	Vector2 previous = from_position;
 	for (int step = 1; step <= steps; step++) {
 		float weight = (float)step / (float)steps;
@@ -292,7 +430,6 @@ String PlayTools::simulate_mouse_drag(const Dictionary &p_args) {
 		previous = current;
 	}
 
-	// 释放
 	Ref<InputEventMouseButton> release_event;
 	release_event.instantiate();
 	release_event->set_button_index((MouseButton)button_index);
@@ -525,6 +662,9 @@ Vector2 PlayTools::_to_vector2(const Variant &p_value) const {
 int PlayTools::_to_keycode(const Variant &p_value) const {
 	if (p_value.get_type() == Variant::INT) {
 		return int(p_value);
+	}
+	if (p_value.get_type() == Variant::FLOAT) {
+		return (int)float(p_value);
 	}
 	if (p_value.get_type() == Variant::NIL) {
 		return 0;
