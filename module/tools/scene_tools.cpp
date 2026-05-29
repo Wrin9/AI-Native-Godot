@@ -11,11 +11,11 @@
 #include "editor/editor_data.h"
 #include "editor/editor_interface.h"
 #include "editor/plugins/editor_plugin.h"
-#include "editor/editor_file_system.h"
+#include "editor/file_system/editor_file_system.h"
 #include "scene/main/window.h"
 #include "scene/main/scene_tree.h"
 #include "scene/resources/packed_scene.h"
-#include "scene/resources/resource_saver.h"
+#include "core/io/resource_saver.h"
 #include "core/io/dir_access.h"
 #include "core/io/file_access.h"
 #include "core/io/json.h"
@@ -32,10 +32,17 @@ void SceneTools::set_editor_plugin(EditorPlugin *p_plugin) {
 // ============================================================
 // 获取当前场景信息
 // ============================================================
+String SceneTools::_to_absolute(const String &p_path) const {
+	if (p_path.begins_with("res://") || p_path.begins_with("user://")) {
+		return ProjectSettings::get_singleton()->globalize_path(p_path);
+	}
+	return p_path;
+}
+
 String SceneTools::get_scene_info(const Dictionary &p_args) {
 	Node *scene_root = _get_edited_scene_root();
 	if (!scene_root) {
-		return R"({"error": "No scene is currently open in the editor."})";
+		return R"json({"error": "No scene is currently open in the editor."})json";
 	}
 
 	Dictionary info = _build_scene_info(scene_root);
@@ -43,7 +50,12 @@ String SceneTools::get_scene_info(const Dictionary &p_args) {
 	// 附加打开的场景列表和运行状态
 	EditorInterface *editor = EditorInterface::get_singleton();
 	if (editor) {
-		info["open_scenes"] = editor->get_open_scenes();
+		PackedStringArray open_scenes_packed = editor->get_open_scenes();
+		Array open_scenes;
+		for (int i = 0; i < open_scenes_packed.size(); i++) {
+			open_scenes.push_back(open_scenes_packed[i]);
+		}
+		info["open_scenes"] = open_scenes;
 		info["is_playing_scene"] = editor->is_playing_scene();
 	}
 
@@ -60,7 +72,7 @@ String SceneTools::get_scene_info(const Dictionary &p_args) {
 String SceneTools::get_scene_tree(const Dictionary &p_args) {
 	Node *scene_root = _get_edited_scene_root();
 	if (!scene_root) {
-		return R"({"error": "No scene is currently open in the editor."})";
+		return R"json({"error": "No scene is currently open in the editor."})json";
 	}
 
 	int max_depth = 4;
@@ -85,19 +97,32 @@ String SceneTools::list_scenes(const Dictionary &p_args) {
 	extensions.push_back(".scn");
 
 	Array scene_paths;
-	_collect_matching_files(root_path, recursive, max_entries, scene_paths, extensions);
+	_collect_matching_files(_to_absolute(root_path), recursive, max_entries, scene_paths, extensions);
+
+	// Convert absolute paths back to res://
+	Array res_paths;
+	String res_root = root_path;
+	for (int i = 0; i < scene_paths.size(); i++) {
+		String sp = scene_paths[i];
+		res_paths.push_back(ProjectSettings::get_singleton()->localize_path(sp));
+	}
 
 	Dictionary result;
 	result["path"] = root_path;
-	result["scene_count"] = scene_paths.size();
-	result["scenes"] = scene_paths;
+	result["scene_count"] = res_paths.size();
+	result["scenes"] = res_paths;
 
 	EditorInterface *editor = EditorInterface::get_singleton();
 	if (editor) {
-		result["open_scenes"] = editor->get_open_scenes();
+		PackedStringArray open_scenes_packed = editor->get_open_scenes();
+		Array open_scenes;
+		for (int i = 0; i < open_scenes_packed.size(); i++) {
+			open_scenes.push_back(open_scenes_packed[i]);
+		}
+		result["open_scenes"] = open_scenes;
 	}
 
-	return JSON::stringify(result, "\t");
+	return JSON::stringify(result, "	");
 }
 
 // ============================================================
@@ -106,10 +131,14 @@ String SceneTools::list_scenes(const Dictionary &p_args) {
 String SceneTools::list_open_scenes(const Dictionary &p_args) {
 	EditorInterface *editor = EditorInterface::get_singleton();
 	if (!editor) {
-		return R"({"error": "Editor interface not available."})";
+		return R"json({"error": "Editor interface not available."})json";
 	}
 
-	Array open_scenes = editor->get_open_scenes();
+	PackedStringArray open_scenes_packed = editor->get_open_scenes();
+	Array open_scenes;
+	for (int i = 0; i < open_scenes_packed.size(); i++) {
+		open_scenes.push_back(open_scenes_packed[i]);
+	}
 	Dictionary result;
 	result["open_scenes"] = open_scenes;
 	result["count"] = open_scenes.size();
@@ -122,22 +151,22 @@ String SceneTools::list_open_scenes(const Dictionary &p_args) {
 String SceneTools::open_scene(const Dictionary &p_args) {
 	String path = _normalize_path(p_args.get("path", ""));
 	if (path.is_empty()) {
-		return R"({"error": "'path' is required."})";
+		return R"json({"error": "'path' is required."})json";
 	}
 
-	if (!FileAccess::file_exists(path)) {
-		return vformat(R"({"error": "Scene not found: %s"})", path);
+	if (!FileAccess::exists(path)) {
+		return vformat(R"json({"error": "Scene not found: %s"})json", path);
 	}
 
 	EditorInterface *editor = EditorInterface::get_singleton();
 	if (!editor) {
-		return R"({"error": "Editor interface not available."})";
+		return R"json({"error": "Editor interface not available."})json";
 	}
 
 	bool set_inherited = p_args.get("set_inherited", false);
 	editor->open_scene_from_path(path, set_inherited);
 
-	return vformat(R"({"opened": "%s"})", path);
+	return vformat(R"json({"opened": "%s"})json", path);
 }
 
 // ============================================================
@@ -146,12 +175,12 @@ String SceneTools::open_scene(const Dictionary &p_args) {
 String SceneTools::create_new_scene(const Dictionary &p_args) {
 	String path = _normalize_path(p_args.get("path", ""));
 	if (path.is_empty()) {
-		return R"({"error": "'path' is required."})";
+		return R"json({"error": "'path' is required."})json";
 	}
 
 	String root_type = String(p_args.get("root_type", "Node2D")).strip_edges();
 	if (!ClassDB::class_exists(root_type)) {
-		return vformat(R"({"error": "Unknown Godot class '%s'.'})", root_type);
+		return vformat(R"json({"error": "Unknown Godot class '%s'.'})json", root_type);
 	}
 
 	// 实例化根节点
@@ -160,7 +189,7 @@ String SceneTools::create_new_scene(const Dictionary &p_args) {
 		if (obj) {
 			memdelete(obj);
 		}
-		return vformat(R"({"error": "'%s' is not instantiable as a Node."})", root_type);
+		return vformat(R"json({"error": "'%s' is not instantiable as a Node."})json", root_type);
 	}
 
 	Node *root = Object::cast_to<Node>(obj);
@@ -171,9 +200,9 @@ String SceneTools::create_new_scene(const Dictionary &p_args) {
 	String script_path = _normalize_path(p_args.get("script_path", ""));
 	if (!script_path.is_empty()) {
 		Ref<Resource> script_res = ResourceLoader::load(script_path);
-		if (script_res.is_null() || !script_ref->is_class("Script")) {
+		if (script_res.is_null() || !script_res->is_class("Script")) {
 			memdelete(root);
-			return vformat(R"({"error": "Script not found or invalid: %s"})", script_path);
+			return vformat(R"json({"error": "Script not found or invalid: %s"})json", script_path);
 		}
 		root->set_script(script_res);
 	}
@@ -184,21 +213,21 @@ String SceneTools::create_new_scene(const Dictionary &p_args) {
 	Error pack_err = packed->pack(root);
 	if (pack_err != OK) {
 		memdelete(root);
-		return vformat(R"({"error": "Failed to pack scene (code %d)."})", (int)pack_err);
+		return vformat(R"json({"error": "Failed to pack scene (code %d)."})json", (int)pack_err);
 	}
 
 	// 确保父目录存在
 	String ensure_err = _ensure_parent_dir(path);
 	if (!ensure_err.is_empty()) {
 		memdelete(root);
-		return vformat(R"({"error": "Failed to create parent directory for %s"})", path);
+		return vformat(R"json({"error": "Failed to create parent directory for %s"})json", path);
 	}
 
 	// 保存场景
 	Error save_err = ResourceSaver::save(packed, path, ResourceSaver::FLAG_CHANGE_PATH);
 	memdelete(root);
 	if (save_err != OK) {
-		return vformat(R"({"error": "Failed to save scene to %s (code %d)."})", path, (int)save_err);
+		return vformat(R"json({"error": "Failed to save scene to %s (code %d)."})json", path, (int)save_err);
 	}
 
 	_refresh_filesystem();
@@ -224,19 +253,19 @@ String SceneTools::create_new_scene(const Dictionary &p_args) {
 String SceneTools::save_scene(const Dictionary &p_args) {
 	EditorInterface *editor = EditorInterface::get_singleton();
 	if (!editor) {
-		return R"({"error": "Editor interface not available."})";
+		return R"json({"error": "Editor interface not available."})json";
 	}
 
 	Node *scene_root = editor->get_edited_scene_root();
 	if (!scene_root) {
-		return R"({"error": "No edited scene is open."})";
+		return R"json({"error": "No edited scene is open."})json";
 	}
 
 	Error save_result = editor->save_scene();
 	if (save_result == OK) {
-		return R"({"saved": true})";
+		return R"json({"saved": true})json";
 	}
-	return vformat(R"({"error": "Failed to save scene (code %d)"})", (int)save_result);
+	return vformat(R"json({"error": "Failed to save scene (code %d)"})json", (int)save_result);
 }
 
 // ============================================================
@@ -245,28 +274,28 @@ String SceneTools::save_scene(const Dictionary &p_args) {
 String SceneTools::save_scene_as(const Dictionary &p_args) {
 	String path = _normalize_path(p_args.get("path", ""));
 	if (path.is_empty()) {
-		return R"({"error": "'path' is required."})";
+		return R"json({"error": "'path' is required."})json";
 	}
 
 	EditorInterface *editor = EditorInterface::get_singleton();
 	if (!editor) {
-		return R"({"error": "Editor interface not available."})";
+		return R"json({"error": "Editor interface not available."})json";
 	}
 
 	Node *scene_root = editor->get_edited_scene_root();
 	if (!scene_root) {
-		return R"({"error": "No edited scene is open."})";
+		return R"json({"error": "No edited scene is open."})json";
 	}
 
 	String ensure_err = _ensure_parent_dir(path);
 	if (!ensure_err.is_empty()) {
-		return vformat(R"({"error": "Failed to create parent directory for %s"})", path);
+		return vformat(R"json({"error": "Failed to create parent directory for %s"})json", path);
 	}
 
 	bool with_preview = p_args.get("with_preview", true);
 	editor->save_scene_as(path, with_preview);
 
-	return vformat(R"({"saved_as": "%s"})", path);
+	return vformat(R"json({"saved_as": "%s"})json", path);
 }
 
 // ============================================================
@@ -275,18 +304,18 @@ String SceneTools::save_scene_as(const Dictionary &p_args) {
 String SceneTools::instantiate_scene(const Dictionary &p_args) {
 	String scene_path = _normalize_path(p_args.get("scene_path", ""));
 	if (scene_path.is_empty()) {
-		return R"({"error": "'scene_path' is required."})";
+		return R"json({"error": "'scene_path' is required."})json";
 	}
 
 	// 加载打包场景
 	Ref<PackedScene> packed = ResourceLoader::load(scene_path);
 	if (packed.is_null()) {
-		return vformat(R"({"error": "Scene not found or invalid: %s"})", scene_path);
+		return vformat(R"json({"error": "Scene not found or invalid: %s"})json", scene_path);
 	}
 
 	Node *scene_root = _get_edited_scene_root();
 	if (!scene_root) {
-		return R"({"error": "No edited scene is open."})";
+		return R"json({"error": "No edited scene is open."})json";
 	}
 
 	// 确定父节点
@@ -299,7 +328,7 @@ String SceneTools::instantiate_scene(const Dictionary &p_args) {
 	// 实例化
 	Node *instance = packed->instantiate();
 	if (!instance) {
-		return vformat(R"({"error": "Failed to instantiate scene: %s"})", scene_path);
+		return vformat(R"json({"error": "Failed to instantiate scene: %s"})json", scene_path);
 	}
 
 	// 设置名称
@@ -331,27 +360,27 @@ String SceneTools::create_packed_scene_from_node(const Dictionary &p_args) {
 
 	Node *node = _resolve_node_path(node_path_str);
 	if (!node) {
-		return R"({"error": "Node not found."})";
+		return R"json({"error": "Node not found."})json";
 	}
 	if (path.is_empty()) {
-		return R"({"error": "'path' is required."})";
+		return R"json({"error": "'path' is required."})json";
 	}
 
 	Ref<PackedScene> packed;
 	packed.instantiate();
 	Error pack_err = packed->pack(node);
 	if (pack_err != OK) {
-		return vformat(R"({"error": "Failed to pack node (code %d)."})", (int)pack_err);
+		return vformat(R"json({"error": "Failed to pack node (code %d)."})json", (int)pack_err);
 	}
 
 	String ensure_err = _ensure_parent_dir(path);
 	if (!ensure_err.is_empty()) {
-		return vformat(R"({"error": "Failed to create parent directory for %s"})", path);
+		return vformat(R"json({"error": "Failed to create parent directory for %s"})json", path);
 	}
 
 	Error save_err = ResourceSaver::save(packed, path, ResourceSaver::FLAG_CHANGE_PATH);
 	if (save_err != OK) {
-		return vformat(R"({"error": "Failed to save PackedScene to %s (code %d)."})", path, (int)save_err);
+		return vformat(R"json({"error": "Failed to save PackedScene to %s (code %d)."})json", path, (int)save_err);
 	}
 
 	EditorInterface *editor = EditorInterface::get_singleton();
@@ -372,17 +401,17 @@ String SceneTools::create_packed_scene_from_node(const Dictionary &p_args) {
 String SceneTools::get_packed_scene_info(const Dictionary &p_args) {
 	String path = _normalize_path(p_args.get("path", ""));
 	if (path.is_empty()) {
-		return R"({"error": "'path' is required."})";
+		return R"json({"error": "'path' is required."})json";
 	}
 
 	Ref<PackedScene> packed = ResourceLoader::load(path);
 	if (packed.is_null()) {
-		return vformat(R"({"error": "PackedScene not found or invalid: %s"})", path);
+		return vformat(R"json({"error": "PackedScene not found or invalid: %s"})json", path);
 	}
 
 	Node *instance = packed->instantiate();
 	if (!instance) {
-		return vformat(R"({"error": "Failed to instantiate PackedScene for inspection: %s"})", path);
+		return vformat(R"json({"error": "Failed to instantiate PackedScene for inspection: %s"})json", path);
 	}
 
 	int max_depth = CLAMP(int(p_args.get("max_depth", 3)), 1, 100);
@@ -403,7 +432,7 @@ String SceneTools::get_packed_scene_info(const Dictionary &p_args) {
 String SceneTools::get_selection(const Dictionary &p_args) {
 	EditorInterface *editor = EditorInterface::get_singleton();
 	if (!editor) {
-		return R"({"error": "Editor interface not available."})";
+		return R"json({"error": "Editor interface not available."})json";
 	}
 
 	Array selected_nodes;
@@ -477,12 +506,23 @@ Node *SceneTools::_resolve_node_path(const String &p_path) const {
 	if (String(scene_root->get_path()) == identifier) {
 		return scene_root;
 	}
-	if (identifier.begins_with("/")) {
-		// 绝对路径
-		SceneTree *tree = scene_root->get_tree();
-		if (tree && tree->get_root()) {
-			return tree->get_root()->get_node_or_null(NodePath(identifier));
-		}
+	// Try relative path from scene root first
+	String root_name = scene_root->get_name();
+	String relative;
+	if (identifier.begins_with("/" + root_name + "/")) {
+		relative = identifier.substr(root_name.length() + 2);
+	} else if (identifier.begins_with("/")) {
+		relative = identifier.substr(1);
+	} else {
+		relative = identifier;
+	}
+	
+	Node *found = scene_root->get_node_or_null(NodePath(relative));
+	if (found) {
+		return found;
+	}
+	if (identifier == "/" + root_name || identifier == root_name) {
+		return scene_root;
 	}
 	return scene_root->get_node_or_null(NodePath(identifier));
 }
@@ -532,7 +572,7 @@ void SceneTools::_collect_matching_files(const String &p_path, bool p_recursive,
 		return;
 	}
 
-	Ref<DirAccess> dir = DirAccess::open(p_path);
+	Ref<DirAccess> dir = DirAccess::open(_to_absolute(p_path));
 	if (dir.is_null()) {
 		return;
 	}
@@ -542,6 +582,10 @@ void SceneTools::_collect_matching_files(const String &p_path, bool p_recursive,
 	while (!item.is_empty()) {
 		if (p_results.size() >= p_max_entries) {
 			break;
+		}
+		if (item == "." || item == "..") {
+			item = dir->get_next();
+			continue;
 		}
 
 		String child_path = p_path.path_join(item);

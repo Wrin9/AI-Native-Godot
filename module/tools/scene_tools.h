@@ -68,6 +68,7 @@ private:
 	// 内部辅助方法
 	Node *_get_edited_scene_root() const;
 	Node *_resolve_node_path(const String &p_path) const;
+	String _to_absolute(const String &p_path) const;
 	String _normalize_path(const String &p_path) const;
 	void _assign_owner_recursive(Node *p_node, Node *p_owner) const;
 	String _ensure_parent_dir(const String &p_path) const;

@@ -10,9 +10,9 @@
 #include "editor/editor_node.h"
 #include "editor/editor_interface.h"
 #include "editor/plugins/editor_plugin.h"
-#include "editor/editor_file_system.h"
-#include "scene/resources/script.h"
-#include "scene/resources/gdscript.h"
+#include "editor/file_system/editor_file_system.h"
+#include "core/object/script_language.h"
+#include "modules/gdscript/gdscript.h"
 #include "core/io/dir_access.h"
 #include "core/io/file_access.h"
 #include "core/io/json.h"
@@ -26,6 +26,13 @@ void ScriptTools::set_editor_plugin(EditorPlugin *p_plugin) {
 // ============================================================
 // 创建脚本
 // ============================================================
+String ScriptTools::_to_absolute(const String &p_path) const {
+	if (p_path.begins_with("res://") || p_path.begins_with("user://")) {
+		return ProjectSettings::get_singleton()->globalize_path(p_path);
+	}
+	return p_path;
+}
+
 String ScriptTools::create_script(const Dictionary &p_args) {
 	String requested_path = p_args.get("path", "");
 	String requested_language = String(p_args.get("language", "auto")).to_lower();
@@ -41,7 +48,7 @@ String ScriptTools::create_script(const Dictionary &p_args) {
 
 	String path = _normalize_script_path(requested_path, resolved_language);
 	if (path.is_empty()) {
-		return R"({"error": "'path' is required."})";
+		return R"json({"error": "'path' is required."})json";
 	}
 
 	// C# 脚本使用不同的模板
@@ -142,19 +149,19 @@ String ScriptTools::create_script(const Dictionary &p_args) {
 String ScriptTools::edit_script(const Dictionary &p_args) {
 	String path = _normalize_path(p_args.get("path", ""));
 	if (path.is_empty()) {
-		return R"({"error": "'path' is required."})";
+		return R"json({"error": "'path' is required."})json";
 	}
 
 	String content = p_args.get("content", "");
 
 	String ensure_err = _ensure_parent_dir(path);
 	if (!ensure_err.is_empty()) {
-		return vformat(R"({"error": "Failed to create parent directory for %s"})", path);
+		return vformat(R"json({"error": "Failed to create parent directory for %s"})json", path);
 	}
 
-	Ref<FileAccess> file = FileAccess::open(path, FileAccess::WRITE);
+	Ref<FileAccess> file = FileAccess::open(_to_absolute(path), FileAccess::WRITE);
 	if (file.is_null()) {
-		return vformat(R"({"error": "Failed to open file for writing: %s"})", path);
+		return vformat(R"json({"error": "Failed to open file for writing: %s"})json", path);
 	}
 
 	file->store_string(content);
@@ -173,16 +180,16 @@ String ScriptTools::edit_script(const Dictionary &p_args) {
 String ScriptTools::patch_script(const Dictionary &p_args) {
 	String path = _normalize_path(p_args.get("path", ""));
 	if (path.is_empty()) {
-		return R"({"error": "'path' is required."})";
+		return R"json({"error": "'path' is required."})json";
 	}
-	if (!FileAccess::file_exists(path)) {
-		return vformat(R"({"error": "File not found: %s"})", path);
+	if (!FileAccess::exists(path)) {
+		return vformat(R"json({"error": "File not found: %s"})json", path);
 	}
 
 	// 读取现有内容
-	Ref<FileAccess> file = FileAccess::open(path, FileAccess::READ);
+	Ref<FileAccess> file = FileAccess::open(_to_absolute(path), FileAccess::READ);
 	if (file.is_null()) {
-		return vformat(R"({"error": "Failed to open file: %s"})", path);
+		return vformat(R"json({"error": "Failed to open file: %s"})json", path);
 	}
 	String content = file->get_as_utf8_string();
 
@@ -194,7 +201,7 @@ String ScriptTools::patch_script(const Dictionary &p_args) {
 	// 查找替换
 	if (!find_text.is_empty()) {
 		if (!content.contains(find_text)) {
-			return vformat(R"({"error": "Patch text was not found in %s."})", path);
+			return vformat(R"json({"error": "Patch text was not found in %s."})json", path);
 		}
 		content = content.replace(find_text, replace_text);
 	}
@@ -237,7 +244,7 @@ String ScriptTools::list_scripts(const Dictionary &p_args) {
 		Vector<String> gd_extensions;
 		gd_extensions.push_back(".gd");
 		Array gd_paths;
-		_collect_matching_files(root_path, recursive, max_entries, gd_paths, gd_extensions);
+		_collect_matching_files(_to_absolute(root_path), recursive, max_entries, gd_paths, gd_extensions);
 		for (int i = 0; i < gd_paths.size(); i++) {
 			Dictionary entry;
 			entry["path"] = gd_paths[i];
@@ -250,7 +257,7 @@ String ScriptTools::list_scripts(const Dictionary &p_args) {
 		Vector<String> cs_extensions;
 		cs_extensions.push_back(".cs");
 		Array cs_paths;
-		_collect_matching_files(root_path, recursive, max_entries, cs_paths, cs_extensions);
+		_collect_matching_files(_to_absolute(root_path), recursive, max_entries, cs_paths, cs_extensions);
 		for (int i = 0; i < cs_paths.size(); i++) {
 			Dictionary entry;
 			entry["path"] = cs_paths[i];
@@ -273,24 +280,24 @@ String ScriptTools::list_scripts(const Dictionary &p_args) {
 String ScriptTools::open_script(const Dictionary &p_args) {
 	String path = _normalize_path(p_args.get("path", ""));
 	if (path.is_empty()) {
-		return R"({"error": "'path' is required."})";
+		return R"json({"error": "'path' is required."})json";
 	}
 
 	Ref<Resource> script_res = ResourceLoader::load(path);
 	if (script_res.is_null()) {
-		return vformat(R"({"error": "Script not found or invalid: %s"})", path);
+		return vformat(R"json({"error": "Script not found or invalid: %s"})json", path);
 	}
 
 	EditorInterface *editor = EditorInterface::get_singleton();
 	if (!editor) {
-		return R"({"error": "Editor interface not available."})";
+		return R"json({"error": "Editor interface not available."})json";
 	}
 
 	int line = int(p_args.get("line", -1));
 	int column = int(p_args.get("column", 0));
 	editor->edit_script(script_res, line, column, true);
 
-	return vformat(R"({"opened": "%s"})", path);
+	return vformat(R"json({"opened": "%s"})json", path);
 }
 
 // ============================================================
@@ -303,34 +310,40 @@ String ScriptTools::get_script_errors(const Dictionary &p_args) {
 	Vector<String> gd_extensions;
 	gd_extensions.push_back(".gd");
 	Array gd_paths;
-	_collect_matching_files(root_path, true, max_files, gd_paths, gd_extensions);
+	_collect_matching_files(_to_absolute(root_path), true, max_files, gd_paths, gd_extensions);
 
 	Array results;
 	int checked = 0;
+
+	// 使用 GDScriptLanguage::validate() 进行纯语法检查
+	// 相比 script->reload()，它不会因跨文件依赖而报 ERR_PARSE_ERROR
+	GDScriptLanguage *gd_lang = GDScriptLanguage::get_singleton();
 
 	for (int i = 0; i < gd_paths.size(); i++) {
 		String file_path = gd_paths[i];
 		checked++;
 
-		// 读取文件内容进行编译检查
-		Ref<GDScript> script;
-		script.instantiate();
-		script->set_resource_path(file_path);
-
-		Ref<FileAccess> file = FileAccess::open(file_path, FileAccess::READ);
+		Ref<FileAccess> file = FileAccess::open(_to_absolute(file_path), FileAccess::READ);
 		if (file.is_null()) {
 			continue;
 		}
-		script->set_source_code(file->get_as_utf8_string());
+		String source = file->get_as_utf8_string();
 
-		Error err = script->reload();
-		if (err != OK) {
-			Dictionary error_entry;
-			error_entry["path"] = file_path;
-			error_entry["ok"] = false;
-			error_entry["error_code"] = (int)err;
-			error_entry["language"] = "gdscript";
-			results.push_back(error_entry);
+		List<ScriptLanguage::ScriptError> errors;
+		List<ScriptLanguage::Warning> warnings;
+		bool valid = gd_lang->validate(source, file_path, nullptr, &errors, &warnings);
+
+		if (!valid) {
+			for (const ScriptLanguage::ScriptError &err : errors) {
+				Dictionary error_entry;
+				error_entry["path"] = file_path;
+				error_entry["ok"] = false;
+				error_entry["line"] = err.line;
+				error_entry["column"] = err.column;
+				error_entry["message"] = err.message;
+				error_entry["language"] = "gdscript";
+				results.push_back(error_entry);
+			}
 		}
 	}
 
@@ -348,32 +361,55 @@ String ScriptTools::get_script_errors(const Dictionary &p_args) {
 String ScriptTools::validate_script(const Dictionary &p_args) {
 	String path = _normalize_path(p_args.get("path", ""));
 	if (path.is_empty()) {
-		return R"({"error": "'path' is required."})";
+		return R"json({"error": "'path' is required."})json";
 	}
 
-	if (!FileAccess::file_exists(path)) {
-		return vformat(R"({"error": "File not found: %s"})", path);
+	if (!FileAccess::exists(path)) {
+		return vformat(R"json({"error": "File not found: %s"})json", path);
 	}
 
 	String language = _guess_script_language(path);
 	Dictionary result;
 
 	if (language == "gdscript") {
-		Ref<FileAccess> file = FileAccess::open(path, FileAccess::READ);
+		Ref<FileAccess> file = FileAccess::open(_to_absolute(path), FileAccess::READ);
 		if (file.is_null()) {
-			return vformat(R"({"error": "Failed to open file: %s"})", path);
+			return vformat(R"json({"error": "Failed to open file: %s"})json", path);
+		}
+		String source = file->get_as_utf8_string();
+
+		// 使用 GDScriptLanguage::validate() 进行纯语法检查
+		GDScriptLanguage *gd_lang = GDScriptLanguage::get_singleton();
+		List<ScriptLanguage::ScriptError> errors;
+		List<ScriptLanguage::Warning> warnings;
+		bool valid = gd_lang->validate(source, path, nullptr, &errors, &warnings);
+
+		result["path"] = path;
+		result["ok"] = valid;
+		result["language"] = "gdscript";
+
+		if (!valid) {
+			Array err_array;
+			for (const ScriptLanguage::ScriptError &err : errors) {
+				Dictionary ed;
+				ed["line"] = err.line;
+				ed["column"] = err.column;
+				ed["message"] = err.message;
+				err_array.push_back(ed);
+			}
+			result["errors"] = err_array;
 		}
 
-		Ref<GDScript> script;
-		script.instantiate();
-		script->set_resource_path(path);
-		script->set_source_code(file->get_as_utf8_string());
-
-		Error err = script->reload();
-		result["path"] = path;
-		result["ok"] = err == OK;
-		result["error_code"] = (int)err;
-		result["language"] = "gdscript";
+		if (warnings.size() > 0) {
+			Array warn_array;
+			for (const ScriptLanguage::Warning &w : warnings) {
+				Dictionary wd;
+				wd["start_line"] = w.start_line;
+				wd["message"] = w.message;
+				warn_array.push_back(wd);
+			}
+			result["warnings"] = warn_array;
+		}
 	} else {
 		result["path"] = path;
 		result["ok"] = true;
@@ -406,7 +442,7 @@ String ScriptTools::request_script_reload(const Dictionary &p_args) {
 	}
 
 	_refresh_filesystem();
-	return R"({"message": "Requested Godot resource filesystem rescan."})";
+	return R"json({"message": "Requested Godot resource filesystem rescan."})json";
 }
 
 // ============================================================
@@ -475,7 +511,7 @@ void ScriptTools::_collect_matching_files(const String &p_path, bool p_recursive
 		return;
 	}
 
-	Ref<DirAccess> dir = DirAccess::open(p_path);
+	Ref<DirAccess> dir = DirAccess::open(_to_absolute(p_path));
 	if (dir.is_null()) {
 		return;
 	}
@@ -483,6 +519,10 @@ void ScriptTools::_collect_matching_files(const String &p_path, bool p_recursive
 	dir->list_dir_begin();
 	String item = dir->get_next();
 	while (!item.is_empty()) {
+		if (item == "." || item == "..") {
+			item = dir->get_next();
+			continue;
+		}
 		if (p_results.size() >= p_max_entries) {
 			break;
 		}

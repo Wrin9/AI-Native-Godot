@@ -11,8 +11,9 @@
 #include "core/os/os.h"
 #include "scene/main/node.h"
 #include "scene/main/scene_tree.h"
-#include "editor/editor_plugin.h"
+#include "editor/plugins/editor_plugin.h"
 #include "editor/editor_node.h"
+#include "editor/editor_interface.h"
 
 // ============================================================
 // 事件类型常量定义
@@ -313,7 +314,7 @@ void MCPEventBus::_on_play_state_changed() {
 	Dictionary data;
 	SceneTree *tree = SceneTree::get_singleton();
 	if (tree) {
-		data["is_playing"] = tree->is_debugging();
+		data["is_playing"] = EditorInterface::get_singleton() && EditorInterface::get_singleton()->is_playing_scene();
 	}
 	push_event(EVENT_PLAY_STATE_CHANGED, data);
 }

@@ -54,6 +54,7 @@ private:
 	EditorPlugin *_plugin = nullptr;
 
 	// 内部辅助方法
+	String _to_absolute(const String &p_path) const;
 	String _normalize_path(const String &p_path) const;
 	String _ensure_parent_dir(const String &p_path) const;
 	void _refresh_filesystem() const;

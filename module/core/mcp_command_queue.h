@@ -38,12 +38,23 @@ public:
 
 	// 命令状态
 	enum CommandStatus {
-		STATUS_QUEUED,
-		STATUS_EXECUTING,
-		STATUS_COMPLETED,
-		STATUS_FAILED,
-		STATUS_ROLLED_BACK,
+		STATUS_QUEUED = 0,
+		STATUS_EXECUTING = 1,
+		STATUS_COMPLETED = 2,
+		STATUS_FAILED = 3,
+		STATUS_ROLLED_BACK = 4,
 	};
+
+	// 暴露给 GDScript 的常量（避免 BIND_ENUM_CONSTANT 的 GetTypeInfo 特化问题）
+	static const int PRIORITY_LOW_VAL = PRIORITY_LOW;
+	static const int PRIORITY_NORMAL_VAL = PRIORITY_NORMAL;
+	static const int PRIORITY_HIGH_VAL = PRIORITY_HIGH;
+	static const int PRIORITY_CRITICAL_VAL = PRIORITY_CRITICAL;
+	static const int STATUS_QUEUED_VAL = STATUS_QUEUED;
+	static const int STATUS_EXECUTING_VAL = STATUS_EXECUTING;
+	static const int STATUS_COMPLETED_VAL = STATUS_COMPLETED;
+	static const int STATUS_FAILED_VAL = STATUS_FAILED;
+	static const int STATUS_ROLLED_BACK_VAL = STATUS_ROLLED_BACK;
 
 	// 命令结构体
 	struct Command {
@@ -84,10 +95,10 @@ public:
 	// ---- 公开 API ----
 
 	// 入队单个命令，返回命令 ID
-	String enqueue(const String &p_tool, const Dictionary &p_args, Priority p_priority = PRIORITY_NORMAL, uint64_t p_timeout_msec = 0);
+	String enqueue(const String &p_tool, const Dictionary &p_args, int p_priority = 1, uint64_t p_timeout_msec = 0);
 
 	// 入队事务（多命令原子执行），返回事务 ID
-	String enqueue_transaction(const Vector<Dictionary> &p_commands_data, Priority p_priority = PRIORITY_NORMAL);
+	String enqueue_transaction(const Array &p_commands_data, int p_priority = 1);
 
 	// 每帧调用，处理队列中待执行的命令
 	void process_queue();
@@ -162,7 +173,7 @@ private:
 	Callable _execute_callback;
 
 	// 互斥锁
-	Mutex *_mutex;
+	mutable Mutex _mutex;
 
 	// 上次执行时间
 	uint64_t _last_execute_msec = 0;
@@ -184,7 +195,7 @@ private:
 	void _process_transaction_step(const String &p_transaction_id);
 	void _rollback_transaction(const String &p_transaction_id);
 	String _generate_id() const;
-	void _update_command_status(const String &p_id, CommandStatus p_status);
+	void _update_command_status(const String &p_id, int p_status);
 };
 
 #endif // MCP_COMMAND_QUEUE_H

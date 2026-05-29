@@ -17,7 +17,9 @@
 #include "core/io/json.h"
 #include "core/config/project_settings.h"
 #include "core/os/os.h"
-#include "core/string/marshalls.h"
+#include "core/string/ustring.h"
+#include "core/variant/variant.h"
+#include "core/crypto/crypto_core.h"
 
 // 按键名称映射
 static HashMap<String, Key> _init_key_name_map() {
@@ -65,7 +67,7 @@ void PlayTools::set_editor_plugin(EditorPlugin *p_plugin) {
 String PlayTools::get_play_state(const Dictionary &p_args) {
 	EditorInterface *editor = EditorInterface::get_singleton();
 	if (!editor) {
-		return R"({"error": "Editor interface not available."})";
+		return R"json({"error": "Editor interface not available."})json";
 	}
 
 	Dictionary result;
@@ -84,7 +86,7 @@ String PlayTools::enter_play_mode(const Dictionary &p_args) {
 
 	EditorInterface *editor = EditorInterface::get_singleton();
 	if (!editor) {
-		return R"({"error": "Editor interface not available."})";
+		return R"json({"error": "Editor interface not available."})json";
 	}
 
 	if (mode == "current") {
@@ -94,14 +96,14 @@ String PlayTools::enter_play_mode(const Dictionary &p_args) {
 	} else if (mode == "custom") {
 		String scene_path = _normalize_path(p_args.get("scene_path", ""));
 		if (scene_path.is_empty()) {
-			return R"({"error": "'scene_path' is required when mode is 'custom'."})";
+			return R"json({"error": "'scene_path' is required when mode is 'custom'."})json";
 		}
 		editor->play_custom_scene(scene_path);
 	} else {
-		return vformat(R"({"error": "Unsupported play mode '%s'."})", mode);
+		return vformat(R"json({"error": "Unsupported play mode '%s'."})json", mode);
 	}
 
-	return vformat(R"({"entered_play_mode": "%s"})", mode);
+	return vformat(R"json({"entered_play_mode": "%s"})json", mode);
 }
 
 // ============================================================
@@ -110,11 +112,11 @@ String PlayTools::enter_play_mode(const Dictionary &p_args) {
 String PlayTools::play_main_scene(const Dictionary &p_args) {
 	EditorInterface *editor = EditorInterface::get_singleton();
 	if (!editor) {
-		return R"({"error": "Editor interface not available."})";
+		return R"json({"error": "Editor interface not available."})json";
 	}
 
 	editor->play_main_scene();
-	return R"({"started": "main_scene"})";
+	return R"json({"started": "main_scene"})json";
 }
 
 // ============================================================
@@ -123,11 +125,11 @@ String PlayTools::play_main_scene(const Dictionary &p_args) {
 String PlayTools::exit_play_mode(const Dictionary &p_args) {
 	EditorInterface *editor = EditorInterface::get_singleton();
 	if (!editor) {
-		return R"({"error": "Editor interface not available."})";
+		return R"json({"error": "Editor interface not available."})json";
 	}
 
 	editor->stop_playing_scene();
-	return R"({"stopped": true})";
+	return R"json({"stopped": true})json";
 }
 
 // ============================================================
@@ -136,7 +138,7 @@ String PlayTools::exit_play_mode(const Dictionary &p_args) {
 String PlayTools::simulate_action(const Dictionary &p_args) {
 	String action_name = String(p_args.get("action", "")).strip_edges();
 	if (action_name.is_empty()) {
-		return R"({"error": "'action' is required."})";
+		return R"json({"error": "'action' is required."})json";
 	}
 
 	String mode = String(p_args.get("mode", "tap")).to_lower();
@@ -175,11 +177,11 @@ String PlayTools::simulate_action(const Dictionary &p_args) {
 String PlayTools::simulate_key_event(const Dictionary &p_args) {
 	String mode = String(p_args.get("mode", "tap")).to_lower();
 
-	Key keycode = (Key)_to_keycode(p_args.get("key"));
-	Key physical_keycode = (Key)_to_keycode(p_args.get("physical_key"));
+	Key keycode = (Key)_to_keycode(p_args.get("key", Variant()));
+	Key physical_keycode = (Key)_to_keycode(p_args.get("physical_key", Variant()));
 
 	if (keycode == Key::NONE && physical_keycode == Key::NONE) {
-		return R"({"error": "'key' or 'physical_key' is required."})";
+		return R"json({"error": "'key' or 'physical_key' is required."})json";
 	}
 
 	// 按下事件
@@ -284,8 +286,7 @@ String PlayTools::simulate_mouse_drag(const Dictionary &p_args) {
 		motion_event->set_position(current);
 		motion_event->set_global_position(current);
 		motion_event->set_relative(current - previous);
-		motion_event->set_screen_relative(current - previous);
-		motion_event->set_button_mask(1 << (button_index - 1));
+		motion_event->set_button_mask((MouseButtonMask)(1 << (button_index - 1)));
 		Input::get_singleton()->parse_input_event(motion_event);
 
 		previous = current;
@@ -318,9 +319,9 @@ String PlayTools::simulate_mouse_drag(const Dictionary &p_args) {
 // 模拟输入序列
 // ============================================================
 String PlayTools::simulate_input_sequence(const Dictionary &p_args) {
-	Variant events_var = p_args.get("events");
+	Variant events_var = p_args.get("events", Variant());
 	if (events_var.get_type() != Variant::ARRAY) {
-		return R"({"error": "'events' must be an array."})";
+		return R"json({"error": "'events' must be an array."})json";
 	}
 
 	Array events = events_var;
@@ -348,7 +349,7 @@ String PlayTools::simulate_input_sequence(const Dictionary &p_args) {
 		} else if (event_type == "mouse_drag") {
 			result_text = simulate_mouse_drag(event_data);
 		} else {
-			result_text = vformat(R"({"error": "Unsupported sequence event type '%s'.'})", event_type);
+			result_text = vformat(R"json({"error": "Unsupported sequence event type '%s'.'})json", event_type);
 		}
 
 		item["type"] = event_type;
@@ -376,7 +377,7 @@ String PlayTools::get_time_scale(const Dictionary &p_args) {
 // ============================================================
 String PlayTools::set_time_scale(const Dictionary &p_args) {
 	if (!p_args.has("value")) {
-		return R"({"error": "'value' is required."})";
+		return R"json({"error": "'value' is required."})json";
 	}
 
 	double value = double(p_args["value"]);
@@ -395,7 +396,7 @@ String PlayTools::capture_editor_view(const Dictionary &p_args) {
 
 	EditorInterface *editor = EditorInterface::get_singleton();
 	if (!editor) {
-		return R"({"error": "Editor interface not available."})";
+		return R"json({"error": "Editor interface not available."})json";
 	}
 
 	// 获取视口纹理
@@ -414,12 +415,12 @@ String PlayTools::capture_editor_view(const Dictionary &p_args) {
 	}
 
 	if (texture.is_null()) {
-		return vformat(R"({"error": "Editor viewport '%s' is not available."})", view);
+		return vformat(R"json({"error": "Editor viewport '%s' is not available."})json", view);
 	}
 
 	Ref<Image> image = texture->get_image();
 	if (image.is_null()) {
-		return R"({"error": "Failed to capture viewport image."})";
+		return R"json({"error": "Failed to capture viewport image."})json";
 	}
 
 	Dictionary result;
@@ -429,11 +430,11 @@ String PlayTools::capture_editor_view(const Dictionary &p_args) {
 		String save_path = _normalize_path(p_args.get("save_path", vformat("user://funplay_mcp_capture_%s.png", view)));
 		String ensure_err = _ensure_parent_dir(save_path);
 		if (!ensure_err.is_empty()) {
-			return vformat(R"({"error": "Failed to create parent directory for %s"})", save_path);
+			return vformat(R"json({"error": "Failed to create parent directory for %s"})json", save_path);
 		}
 		Error save_err = image->save_png(save_path);
 		if (save_err != OK) {
-			return vformat(R"({"error": "Failed to save screenshot to %s (code %d)."})", save_path, (int)save_err);
+			return vformat(R"json({"error": "Failed to save screenshot to %s (code %d)."})json", save_path, (int)save_err);
 		}
 		result["saved_path"] = save_path;
 	}
@@ -441,7 +442,7 @@ String PlayTools::capture_editor_view(const Dictionary &p_args) {
 	// 可选返回 data URI
 	if (bool(p_args.get("return_data_uri", true))) {
 		PackedByteArray png_bytes = image->save_png_to_buffer();
-		String base64 = Marshalls::get_singleton()->raw_to_base64(png_bytes);
+		String base64 = CryptoCore::b64_encode_str(png_bytes.ptr(), png_bytes.size());
 		return "data:image/png;base64," + base64;
 	}
 

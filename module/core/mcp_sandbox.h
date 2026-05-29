@@ -45,7 +45,7 @@ public:
 
 	// 在沙箱中执行代码
 	// 返回 Dictionary: { "success": bool, "result": Variant, "error": String, "logs": Array, "stats": Dictionary }
-	Dictionary execute(const String &p_code, const Dictionary &p_context = Dictionary(), SandboxType p_type = SANDBOX_GDSCRIPT);
+	Dictionary execute(const String &p_code, const Dictionary &p_context = Dictionary(), int p_type = 0);
 
 	// 仅验证代码（不执行）
 	bool validate_code(const String &p_code) const;

@@ -12,13 +12,13 @@
 #include "editor/editor_interface.h"
 #include "editor/editor_undo_redo_manager.h"
 #include "editor/plugins/editor_plugin.h"
-#include "editor/editor_selection.h"
+#include "editor/editor_data.h"
 #include "scene/main/window.h"
 #include "scene/main/scene_tree.h"
 #include "scene/2d/node_2d.h"
 #include "scene/3d/node_3d.h"
 #include "scene/gui/control.h"
-#include "scene/resources/script.h"
+#include "core/object/script_language.h"
 #include "core/io/json.h"
 #include "core/object/class_db.h"
 #include "core/object/undo_redo.h"
@@ -37,12 +37,12 @@ void NodeTools::set_editor_plugin(EditorPlugin *p_plugin) {
 String NodeTools::get_node_info(const Dictionary &p_args) {
 	String node_path = String(p_args.get("node_path", "")).strip_edges();
 	if (node_path.is_empty()) {
-		return R"({"error": "'node_path' is required."})";
+		return R"json({"error": "'node_path' is required."})json";
 	}
 
 	Node *node = _resolve_node_path(node_path);
 	if (!node) {
-		return vformat(R"({"error": "Node not found: %s"})", node_path);
+		return vformat(R"json({"error": "Node not found: %s"})json", node_path);
 	}
 
 	Dictionary info = _build_node_info(node);
@@ -55,7 +55,7 @@ String NodeTools::get_node_info(const Dictionary &p_args) {
 String NodeTools::find_nodes(const Dictionary &p_args) {
 	Node *scene_root = _get_edited_scene_root();
 	if (!scene_root) {
-		return R"({"error": "No scene is currently open in the editor."})";
+		return R"json({"error": "No scene is currently open in the editor."})json";
 	}
 
 	String name_contains = String(p_args.get("name_contains", "")).to_lower();
@@ -78,17 +78,17 @@ String NodeTools::find_nodes(const Dictionary &p_args) {
 String NodeTools::select_node(const Dictionary &p_args) {
 	String node_path = String(p_args.get("node_path", "")).strip_edges();
 	if (node_path.is_empty()) {
-		return R"({"error": "'node_path' is required."})";
+		return R"json({"error": "'node_path' is required."})json";
 	}
 
 	Node *node = _resolve_node_path(node_path);
 	if (!node) {
-		return vformat(R"({"error": "Node not found: %s"})", node_path);
+		return vformat(R"json({"error": "Node not found: %s"})json", node_path);
 	}
 
 	_select_node(node);
 
-	return vformat(R"({"selected": "%s"})", node_path);
+	return vformat(R"json({"selected": "%s"})json", node_path);
 }
 
 // ============================================================
@@ -97,12 +97,12 @@ String NodeTools::select_node(const Dictionary &p_args) {
 String NodeTools::create_node(const Dictionary &p_args) {
 	String node_type = String(p_args.get("node_type", "")).strip_edges();
 	if (node_type.is_empty()) {
-		return R"({"error": "'node_type' is required."})";
+		return R"json({"error": "'node_type' is required."})json";
 	}
 
 	Node *scene_root = _get_edited_scene_root();
 	if (!scene_root) {
-		return R"({"error": "No edited scene is open."})";
+		return R"json({"error": "No edited scene is open."})json";
 	}
 
 	// 获取父节点
@@ -114,7 +114,7 @@ String NodeTools::create_node(const Dictionary &p_args) {
 
 	// 验证类型
 	if (!ClassDB::class_exists(node_type)) {
-		return vformat(R"({"error": "Unknown Godot class '%s'.'})", node_type);
+		return vformat(R"json({"error": "Unknown Godot class '%s'.'})json", node_type);
 	}
 
 	// 实例化节点
@@ -123,7 +123,7 @@ String NodeTools::create_node(const Dictionary &p_args) {
 		if (obj) {
 			memdelete(obj);
 		}
-		return vformat(R"({"error": "'%s' is not instantiable as a Node."})", node_type);
+		return vformat(R"json({"error": "'%s' is not instantiable as a Node."})json", node_type);
 	}
 
 	Node *node = Object::cast_to<Node>(obj);
@@ -143,7 +143,7 @@ String NodeTools::create_node(const Dictionary &p_args) {
 				// 脚本加载失败，回退
 				parent->remove_child(node);
 				memdelete(node);
-				return vformat(R"({"error": "Script not found or invalid: %s"})", script_path);
+				return vformat(R"json({"error": "Script not found or invalid: %s"})json", script_path);
 			}
 			node->set_script(script_res);
 		}
@@ -167,23 +167,23 @@ String NodeTools::create_node(const Dictionary &p_args) {
 String NodeTools::duplicate_node(const Dictionary &p_args) {
 	String node_path = String(p_args.get("node_path", "")).strip_edges();
 	if (node_path.is_empty()) {
-		return R"({"error": "'node_path' is required."})";
+		return R"json({"error": "'node_path' is required."})json";
 	}
 
 	Node *node = _resolve_node_path(node_path);
 	if (!node) {
-		return vformat(R"({"error": "Node not found: %s"})", node_path);
+		return vformat(R"json({"error": "Node not found: %s"})json", node_path);
 	}
 
 	Node *duplicate = node->duplicate();
 	if (!duplicate) {
-		return vformat(R"({"error": "Failed to duplicate node '%s'.'})", node_path);
+		return vformat(R"json({"error": "Failed to duplicate node '%s'.'})json", node_path);
 	}
 
 	Node *parent = node->get_parent();
 	if (!parent) {
 		memdelete(duplicate);
-		return vformat(R"({"error": "Node '%s' has no parent."})", node_path);
+		return vformat(R"json({"error": "Node '%s' has no parent."})json", node_path);
 	}
 
 	parent->add_child(duplicate);
@@ -213,12 +213,12 @@ String NodeTools::rename_node(const Dictionary &p_args) {
 	String node_path = String(p_args.get("node_path", "")).strip_edges();
 	String new_name = String(p_args.get("new_name", "")).strip_edges();
 	if (node_path.is_empty() || new_name.is_empty()) {
-		return R"({"error": "'node_path' and 'new_name' are required."})";
+		return R"json({"error": "'node_path' and 'new_name' are required."})json";
 	}
 
 	Node *node = _resolve_node_path(node_path);
 	if (!node) {
-		return vformat(R"({"error": "Node not found: %s"})", node_path);
+		return vformat(R"json({"error": "Node not found: %s"})json", node_path);
 	}
 
 	Dictionary changes;
@@ -237,21 +237,21 @@ String NodeTools::reparent_node(const Dictionary &p_args) {
 	String node_path = String(p_args.get("node_path", "")).strip_edges();
 	String new_parent_path = String(p_args.get("new_parent_path", "")).strip_edges();
 	if (node_path.is_empty() || new_parent_path.is_empty()) {
-		return R"({"error": "'node_path' and 'new_parent_path' are required."})";
+		return R"json({"error": "'node_path' and 'new_parent_path' are required."})json";
 	}
 
 	Node *node = _resolve_node_path(node_path);
 	Node *new_parent = _resolve_node_path(new_parent_path);
 	if (!node) {
-		return vformat(R"({"error": "Node not found: %s"})", node_path);
+		return vformat(R"json({"error": "Node not found: %s"})json", node_path);
 	}
 	if (!new_parent) {
-		return vformat(R"({"error": "New parent not found: %s"})", new_parent_path);
+		return vformat(R"json({"error": "New parent not found: %s"})json", new_parent_path);
 	}
 
 	Node *scene_root = _get_edited_scene_root();
 	if (node == scene_root) {
-		return R"({"error": "Reparenting the edited scene root is not supported."})";
+		return R"json({"error": "Reparenting the edited scene root is not supported."})json";
 	}
 
 	bool keep_global = p_args.get("keep_global_transform", false);
@@ -320,17 +320,17 @@ String NodeTools::reparent_node(const Dictionary &p_args) {
 String NodeTools::remove_node(const Dictionary &p_args) {
 	String node_path = String(p_args.get("node_path", "")).strip_edges();
 	if (node_path.is_empty()) {
-		return R"({"error": "'node_path' is required."})";
+		return R"json({"error": "'node_path' is required."})json";
 	}
 
 	Node *node = _resolve_node_path(node_path);
 	if (!node) {
-		return vformat(R"({"error": "Node not found: %s"})", node_path);
+		return vformat(R"json({"error": "Node not found: %s"})json", node_path);
 	}
 
 	Node *scene_root = _get_edited_scene_root();
 	if (node == scene_root) {
-		return R"({"error": "Removing the edited scene root is not supported."})";
+		return R"json({"error": "Removing the edited scene root is not supported."})json";
 	}
 
 	Node *parent = node->get_parent();
@@ -339,7 +339,7 @@ String NodeTools::remove_node(const Dictionary &p_args) {
 	}
 	memdelete(node);
 
-	return vformat(R"({"removed": "%s"})", node_path);
+	return vformat(R"json({"removed": "%s"})json", node_path);
 }
 
 // ============================================================
@@ -349,22 +349,22 @@ String NodeTools::set_node_property(const Dictionary &p_args) {
 	String node_path = String(p_args.get("node_path", "")).strip_edges();
 	String property_name = String(p_args.get("property", "")).strip_edges();
 	if (node_path.is_empty() || property_name.is_empty()) {
-		return R"({"error": "'node_path' and 'property' are required."})";
+		return R"json({"error": "'node_path' and 'property' are required."})json";
 	}
 
 	Node *node = _resolve_node_path(node_path);
 	if (!node) {
-		return vformat(R"({"error": "Node not found: %s"})", node_path);
+		return vformat(R"json({"error": "Node not found: %s"})json", node_path);
 	}
 
 	Dictionary changes;
-	changes[property_name] = p_args.get("value");
+	changes[property_name] = p_args.get("value", Variant());
 	_commit_undoable_properties(node, changes, "Set Node Property", bool(p_args.get("undoable", true)));
 
 	Dictionary result;
 	result["node"] = _node_to_summary(node);
 	result["property"] = property_name;
-	result["value"] = p_args.get("value");
+	result["value"] = p_args.get("value", Variant());
 	return JSON::stringify(result, "\t");
 }
 
@@ -374,19 +374,19 @@ String NodeTools::set_node_property(const Dictionary &p_args) {
 String NodeTools::set_node_properties(const Dictionary &p_args) {
 	String node_path = String(p_args.get("node_path", "")).strip_edges();
 	if (node_path.is_empty()) {
-		return R"({"error": "'node_path' is required."})";
+		return R"json({"error": "'node_path' is required."})json";
 	}
 
-	Variant props_var = p_args.get("properties");
+	Variant props_var = p_args.get("properties", Variant());
 	if (props_var.get_type() != Variant::DICTIONARY) {
-		return R"({"error": "'properties' must be an object."})";
+		return R"json({"error": "'properties' must be an object."})json";
 	}
 
 	Dictionary properties = props_var;
 
 	Node *node = _resolve_node_path(node_path);
 	if (!node) {
-		return vformat(R"({"error": "Node not found: %s"})", node_path);
+		return vformat(R"json({"error": "Node not found: %s"})json", node_path);
 	}
 
 	// 合并所有属性变更
@@ -409,12 +409,12 @@ String NodeTools::set_node_properties(const Dictionary &p_args) {
 String NodeTools::set_transform_2d(const Dictionary &p_args) {
 	String node_path = String(p_args.get("node_path", "")).strip_edges();
 	if (node_path.is_empty()) {
-		return R"({"error": "'node_path' is required."})";
+		return R"json({"error": "'node_path' is required."})json";
 	}
 
 	Node *node = _resolve_node_path(node_path);
 	if (!node) {
-		return vformat(R"({"error": "Node not found: %s"})", node_path);
+		return vformat(R"json({"error": "Node not found: %s"})json", node_path);
 	}
 
 	Dictionary changes;
@@ -448,7 +448,7 @@ String NodeTools::set_transform_2d(const Dictionary &p_args) {
 		}
 		_commit_undoable_properties(control, changes, "Set Control Transform", bool(p_args.get("undoable", true)));
 	} else {
-		return vformat(R"({"error": "Node '%s' is not a Node2D or Control."})", node_path);
+		return vformat(R"json({"error": "Node '%s' is not a Node2D or Control."})json", node_path);
 	}
 
 	Dictionary result;
@@ -462,17 +462,17 @@ String NodeTools::set_transform_2d(const Dictionary &p_args) {
 String NodeTools::set_transform_3d(const Dictionary &p_args) {
 	String node_path = String(p_args.get("node_path", "")).strip_edges();
 	if (node_path.is_empty()) {
-		return R"({"error": "'node_path' is required."})";
+		return R"json({"error": "'node_path' is required."})json";
 	}
 
 	Node *node = _resolve_node_path(node_path);
 	if (!node) {
-		return vformat(R"({"error": "Node not found: %s"})", node_path);
+		return vformat(R"json({"error": "Node not found: %s"})json", node_path);
 	}
 
 	Node3D *node_3d = Object::cast_to<Node3D>(node);
 	if (!node_3d) {
-		return vformat(R"({"error": "Node '%s' is not a Node3D."})", node_path);
+		return vformat(R"json({"error": "Node '%s' is not a Node3D."})json", node_path);
 	}
 
 	Dictionary changes;
@@ -499,17 +499,17 @@ String NodeTools::set_node_script(const Dictionary &p_args) {
 	String node_path = String(p_args.get("node_path", "")).strip_edges();
 	String script_path = _normalize_path(p_args.get("script_path", ""));
 	if (node_path.is_empty() || script_path.is_empty()) {
-		return R"({"error": "'node_path' and 'script_path' are required."})";
+		return R"json({"error": "'node_path' and 'script_path' are required."})json";
 	}
 
 	Node *node = _resolve_node_path(node_path);
 	if (!node) {
-		return vformat(R"({"error": "Node not found: %s"})", node_path);
+		return vformat(R"json({"error": "Node not found: %s"})json", node_path);
 	}
 
 	Ref<Resource> script_res = ResourceLoader::load(script_path);
 	if (script_res.is_null()) {
-		return vformat(R"({"error": "Script not found or invalid: %s"})", script_path);
+		return vformat(R"json({"error": "Script not found or invalid: %s"})json", script_path);
 	}
 
 	node->set_script(script_res);
@@ -526,18 +526,18 @@ String NodeTools::set_node_script(const Dictionary &p_args) {
 String NodeTools::list_node_properties(const Dictionary &p_args) {
 	String node_path = String(p_args.get("node_path", "")).strip_edges();
 	if (node_path.is_empty()) {
-		return R"({"error": "'node_path' is required."})";
+		return R"json({"error": "'node_path' is required."})json";
 	}
 
 	Node *node = _resolve_node_path(node_path);
 	if (!node) {
-		return vformat(R"({"error": "Node not found: %s"})", node_path);
+		return vformat(R"json({"error": "Node not found: %s"})json", node_path);
 	}
 
 	bool include_usage = p_args.get("include_usage", false);
 	Array properties;
 
-	TypedArray<Dictionary> prop_list = node->get_property_list();
+	TypedArray<Dictionary> prop_list = node->call("get_property_list");
 	for (int i = 0; i < prop_list.size(); i++) {
 		Dictionary prop_info = prop_list[i];
 		Dictionary item;
@@ -565,16 +565,16 @@ String NodeTools::list_node_properties(const Dictionary &p_args) {
 String NodeTools::list_node_signals(const Dictionary &p_args) {
 	String node_path = String(p_args.get("node_path", "")).strip_edges();
 	if (node_path.is_empty()) {
-		return R"({"error": "'node_path' is required."})";
+		return R"json({"error": "'node_path' is required."})json";
 	}
 
 	Node *node = _resolve_node_path(node_path);
 	if (!node) {
-		return vformat(R"({"error": "Node not found: %s"})", node_path);
+		return vformat(R"json({"error": "Node not found: %s"})json", node_path);
 	}
 
 	Array signals_list;
-	TypedArray<Dictionary> sig_list = node->get_signal_list();
+	TypedArray<Dictionary> sig_list = node->call("get_signal_list");
 	for (int i = 0; i < sig_list.size(); i++) {
 		Dictionary sig_info = sig_list[i];
 		Dictionary item;
@@ -596,18 +596,18 @@ String NodeTools::list_node_signals(const Dictionary &p_args) {
 String NodeTools::list_node_methods(const Dictionary &p_args) {
 	String node_path = String(p_args.get("node_path", "")).strip_edges();
 	if (node_path.is_empty()) {
-		return R"({"error": "'node_path' is required."})";
+		return R"json({"error": "'node_path' is required."})json";
 	}
 
 	Node *node = _resolve_node_path(node_path);
 	if (!node) {
-		return vformat(R"({"error": "Node not found: %s"})", node_path);
+		return vformat(R"json({"error": "Node not found: %s"})json", node_path);
 	}
 
 	bool include_private = p_args.get("include_private", false);
 	Array methods_list;
 
-	TypedArray<Dictionary> meth_list = node->get_method_list();
+	TypedArray<Dictionary> meth_list = node->call("get_method_list");
 	for (int i = 0; i < meth_list.size(); i++) {
 		Dictionary meth_info = meth_list[i];
 		String method_name = meth_info.get("name", "");
@@ -692,11 +692,25 @@ Node *NodeTools::_resolve_node_path(const String &p_path) const {
 	if (String(scene_root->get_path()) == identifier) {
 		return scene_root;
 	}
-	if (identifier.begins_with("/")) {
-		SceneTree *tree = scene_root->get_tree();
-		if (tree && tree->get_root()) {
-			return tree->get_root()->get_node_or_null(NodePath(identifier));
-		}
+	// Try relative path from scene root first
+	String root_name = scene_root->get_name();
+	String relative;
+	if (identifier.begins_with("/" + root_name + "/")) {
+		relative = identifier.substr(root_name.length() + 2);
+	} else if (identifier.begins_with("/")) {
+		relative = identifier.substr(1);
+	} else {
+		relative = identifier;
+	}
+	
+	// Try as child of scene root
+	Node *found = scene_root->get_node_or_null(NodePath(relative));
+	if (found) {
+		return found;
+	}
+	// Also try exact path as-is (for root node itself)
+	if (identifier == "/" + root_name || identifier == root_name) {
+		return scene_root;
 	}
 	return scene_root->get_node_or_null(NodePath(identifier));
 }
@@ -746,15 +760,15 @@ Dictionary NodeTools::_build_node_info(Node *p_node) const {
 
 	// 分组信息
 	Array groups;
-	HashSet<StringName> group_set = p_node->get_groups();
-	for (const StringName &g : group_set) {
-		groups.push_back(String(g));
+	TypedArray<StringName> group_list = p_node->call("get_groups");
+	for (int i = 0; i < group_list.size(); i++) {
+		groups.push_back(String(group_list[i]));
 	}
 	info["groups"] = groups;
 
 	// 脚本
 	Ref<Script> script = p_node->get_script();
-	info["script"] = script.is_valid() ? script->get_resource_path() : "";
+	info["script"] = script.is_valid() ? script->get_path() : "";
 
 	// Node2D 特定信息
 	Node2D *node_2d = Object::cast_to<Node2D>(p_node);
@@ -846,11 +860,11 @@ void NodeTools::_commit_undoable_properties(Object *p_object, const Dictionary &
 		return;
 	}
 
-	UndoRedo *undo_redo = nullptr;
+	EditorUndoRedoManager *undo_redo = nullptr;
 
 	// 尝试获取编辑器的 UndoRedo
 	if (_plugin) {
-		undo_redo = _plugin->get_undo_redo();
+		undo_redo = EditorInterface::get_singleton()->get_editor_undo_redo();
 	}
 
 	if (p_undoable && undo_redo) {
@@ -877,7 +891,7 @@ bool NodeTools::_has_property(Object *p_object, const String &p_property) const 
 	if (!p_object) {
 		return false;
 	}
-	TypedArray<Dictionary> prop_list = p_object->get_property_list();
+	TypedArray<Dictionary> prop_list = p_object->call("get_property_list");
 	for (int i = 0; i < prop_list.size(); i++) {
 		Dictionary prop_info = prop_list[i];
 		if (String(prop_info.get("name", "")) == p_property) {
@@ -953,7 +967,7 @@ void NodeTools::_find_nodes_recursive(Node *p_node, const String &p_name_contain
 	bool script_ok = true;
 	if (!p_script_path.is_empty()) {
 		Ref<Script> script = p_node->get_script();
-		script_ok = script.is_valid() && script->get_resource_path() == p_script_path;
+		script_ok = script.is_valid() && script->get_path() == p_script_path;
 	}
 
 	if (name_ok && class_ok && script_ok) {

@@ -1,0 +1,17 @@
+#!/usr/bin/env python
+"""MCP Editor Module — SCons 构建脚本"""
+Import("env")
+Import("env_modules")
+
+env_mcp_editor = env_modules.Clone()
+
+env_mcp_editor.Append(CPPPATH=["#modules/mcp_editor"])
+
+# 核心类
+env_mcp_editor.add_source_files(env.modules_sources, "core/*.cpp")
+
+# 工具实现
+env_mcp_editor.add_source_files(env.modules_sources, "tools/*.cpp")
+
+# 工具分派器 + 编辑器插件 + 注册
+env_mcp_editor.add_source_files(env.modules_sources, "*.cpp")

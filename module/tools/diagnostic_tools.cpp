@@ -8,7 +8,7 @@
 #include "diagnostic_tools.h"
 
 #include "editor/editor_interface.h"
-#include "editor/editor_file_system.h"
+#include "editor/file_system/editor_file_system.h"
 #include "editor/plugins/editor_plugin.h"
 #include "scene/main/window.h"
 #include "scene/main/scene_tree.h"
@@ -16,6 +16,7 @@
 #include "scene/3d/node_3d.h"
 #include "scene/gui/control.h"
 #include "core/io/dir_access.h"
+#include "core/version.h"
 #include "core/io/file_access.h"
 #include "core/io/json.h"
 #include "core/config/project_settings.h"
@@ -39,6 +40,13 @@ void DiagnosticTools::set_editor_plugin(EditorPlugin *p_plugin) {
 // ============================================================
 // 获取控制台日志
 // ============================================================
+String DiagnosticTools::_to_absolute(const String &p_path) const {
+	if (p_path.begins_with("res://") || p_path.begins_with("user://")) {
+		return ProjectSettings::get_singleton()->globalize_path(p_path);
+	}
+	return p_path;
+}
+
 String DiagnosticTools::get_console_logs(const Dictionary &p_args) {
 	int max_lines = CLAMP(int(p_args.get("max_lines", 200)), 10, 4000);
 	bool include_rotated = p_args.get("include_rotated", true);
@@ -66,12 +74,12 @@ String DiagnosticTools::get_console_logs(const Dictionary &p_args) {
 	}
 
 	if (log_files.is_empty()) {
-		return R"({"error": "No log files found. File logging may be disabled."})";
+		return R"json({"error": "No log files found. File logging may be disabled."})json";
 	}
 
 	// 读取最新的日志文件
 	String selected_file = log_files[log_files.size() - 1];
-	String file_text = FileAccess::get_file_as_string(selected_file);
+	String file_text = FileAccess::get_file_as_string(_to_absolute(selected_file));
 	Vector<String> lines = file_text.split("\n");
 
 	// 过滤日志行
@@ -124,7 +132,7 @@ String DiagnosticTools::get_console_logs(const Dictionary &p_args) {
 String DiagnosticTools::get_performance_snapshot(const Dictionary &p_args) {
 	EditorInterface *editor = EditorInterface::get_singleton();
 	if (!editor) {
-		return R"({"error": "Editor interface not available."})";
+		return R"json({"error": "Editor interface not available."})json";
 	}
 
 	Node *scene_root = editor->get_edited_scene_root();
@@ -162,12 +170,12 @@ String DiagnosticTools::get_performance_snapshot(const Dictionary &p_args) {
 String DiagnosticTools::analyze_scene_complexity(const Dictionary &p_args) {
 	EditorInterface *editor = EditorInterface::get_singleton();
 	if (!editor) {
-		return R"({"error": "Editor interface not available."})";
+		return R"json({"error": "Editor interface not available."})json";
 	}
 
 	Node *scene_root = editor->get_edited_scene_root();
 	if (!scene_root) {
-		return R"({"error": "No scene is currently open in the editor."})";
+		return R"json({"error": "No scene is currently open in the editor."})json";
 	}
 
 	Dictionary stats;
@@ -250,7 +258,7 @@ String DiagnosticTools::get_project_info(const Dictionary &p_args) {
 String DiagnosticTools::map_project(const Dictionary &p_args) {
 	String output_format = String(p_args.get("format", "json")).strip_edges().to_lower();
 	if (output_format != "json" && output_format != "html") {
-		return R"({"error": "'format' must be 'json' or 'html'."})";
+		return R"json({"error": "'format' must be 'json' or 'html'."})json";
 	}
 
 	bool include_scripts = p_args.get("include_scripts", true);
@@ -263,7 +271,7 @@ String DiagnosticTools::map_project(const Dictionary &p_args) {
 	scene_exts.push_back(".tscn");
 	scene_exts.push_back(".scn");
 	Array scene_paths;
-	_collect_matching_files("res://", true, max_files, scene_paths, scene_exts);
+	_collect_matching_files(_to_absolute("res://"), true, max_files, scene_paths, scene_exts);
 
 	Array scenes;
 	for (int i = 0; i < scene_paths.size(); i++) {
@@ -281,7 +289,7 @@ String DiagnosticTools::map_project(const Dictionary &p_args) {
 		script_exts.push_back(".gdshader");
 		script_exts.push_back(".shader");
 		Array script_paths;
-		_collect_matching_files("res://", true, max_files, script_paths, script_exts);
+		_collect_matching_files(_to_absolute("res://"), true, max_files, script_paths, script_exts);
 		for (int i = 0; i < script_paths.size(); i++) {
 			Dictionary script_entry;
 			script_entry["path"] = script_paths[i];
@@ -363,7 +371,7 @@ void DiagnosticTools::_analyze_node_recursive(Node *p_node, int p_depth, Diction
 	if (Object::cast_to<Control>(p_node)) {
 		p_stats["control_count"] = (int)p_stats["control_count"] + 1;
 	}
-	if (p_node->get_script().is_valid()) {
+	if (p_node->get_script().get_type() != Variant::NIL) {
 		p_stats["scripted_nodes"] = (int)p_stats["scripted_nodes"] + 1;
 	}
 
@@ -397,7 +405,7 @@ void DiagnosticTools::_collect_matching_files(const String &p_path, bool p_recur
 		return;
 	}
 
-	Ref<DirAccess> dir = DirAccess::open(p_path);
+	Ref<DirAccess> dir = DirAccess::open(_to_absolute(p_path));
 	if (dir.is_null()) {
 		return;
 	}
@@ -405,6 +413,10 @@ void DiagnosticTools::_collect_matching_files(const String &p_path, bool p_recur
 	dir->list_dir_begin();
 	String item = dir->get_next();
 	while (!item.is_empty()) {
+		if (item == "." || item == "..") {
+			item = dir->get_next();
+			continue;
+		}
 		if (p_results.size() >= p_max_entries) {
 			break;
 		}

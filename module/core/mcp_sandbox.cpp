@@ -28,7 +28,7 @@ MCPSandbox::~MCPSandbox() {
 // 公开 API
 // ============================================================
 
-Dictionary MCPSandbox::execute(const String &p_code, const Dictionary &p_context, SandboxType p_type) {
+Dictionary MCPSandbox::execute(const String &p_code, const Dictionary &p_context, int p_type) {
 	Dictionary result;
 	result["success"] = false;
 	result["result"] = Variant();
@@ -87,13 +87,14 @@ Dictionary MCPSandbox::execute(const String &p_code, const Dictionary &p_context
 		return result;
 	}
 
-	Variant instance = script->new_();
+	// 通过 Object::call 调用 GDScript 的 _new 方法（公共 API）
+	Variant instance = script->call("_new");
 	if (instance.get_type() == Variant::NIL) {
 		result["error"] = "代码实例化返回 null";
 		return result;
 	}
 
-	Object *obj = Object::cast_to<Object>(instance);
+	Object *obj = instance;
 	if (!obj || !obj->has_method("run")) {
 		result["error"] = "动态代码必须定义 run(ctx) 函数";
 		return result;
@@ -373,14 +374,12 @@ String MCPSandbox::_parse_error_message(const String &p_raw_error) const {
 
 void MCPSandbox::_bind_methods() {
 	// 绑定枚举
-	BIND_ENUM_CONSTANT(SANDBOX_GDSCRIPT);
-	BIND_ENUM_CONSTANT(SANDBOX_DRY_RUN);
 
 	// 绑定方法
 	ClassDB::bind_method(D_METHOD("execute", "code", "context", "sandbox_type"),
 			&MCPSandbox::execute,
 			DEFVAL(Dictionary()),
-			DEFVAL(SANDBOX_GDSCRIPT));
+			DEFVAL((int)0));
 
 	ClassDB::bind_method(D_METHOD("validate_code", "code"), &MCPSandbox::validate_code);
 	ClassDB::bind_method(D_METHOD("set_allowed_paths", "paths"), &MCPSandbox::set_allowed_paths);

@@ -11,6 +11,7 @@
 #include "core/object/ref_counted.h"
 #include "core/string/ustring.h"
 #include "core/variant/dictionary.h"
+#include "core/input/input_event.h"
 
 class EditorPlugin;
 
@@ -72,6 +73,7 @@ private:
 	Array _list_autoloads_internal() const;
 	Dictionary _build_input_action_info(const String &p_action_name) const;
 	Dictionary _serialize_input_event(const Ref<InputEvent> &p_event) const;
+	String _to_absolute(const String &p_path) const;
 	String _normalize_path(const String &p_path) const;
 };
 

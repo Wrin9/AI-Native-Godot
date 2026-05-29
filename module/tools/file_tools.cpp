@@ -8,7 +8,7 @@
 #include "file_tools.h"
 
 #include "editor/editor_interface.h"
-#include "editor/editor_file_system.h"
+#include "editor/file_system/editor_file_system.h"
 #include "editor/plugins/editor_plugin.h"
 #include "core/io/dir_access.h"
 #include "core/io/file_access.h"
@@ -30,19 +30,26 @@ void FileTools::set_editor_plugin(EditorPlugin *p_plugin) {
 // ============================================================
 // 列出文件
 // ============================================================
+String FileTools::_to_absolute(const String &p_path) const {
+	if (p_path.begins_with("res://") || p_path.begins_with("user://")) {
+		return ProjectSettings::get_singleton()->globalize_path(p_path);
+	}
+	return p_path;
+}
+
 String FileTools::list_files(const Dictionary &p_args) {
 	String root_path = _normalize_path(p_args.get("path", "res://"));
 	bool recursive = p_args.get("recursive", true);
 	bool include_hidden = p_args.get("include_hidden", false);
 	int max_entries = CLAMP(int(p_args.get("max_entries", 200)), 1, 4000);
 
-	Ref<DirAccess> dir = DirAccess::open(root_path);
+	Ref<DirAccess> dir = DirAccess::open(_to_absolute(root_path));
 	if (dir.is_null()) {
-		return vformat(R"({"error": "Directory not found: %s"})", root_path);
+		return vformat(R"json({"error": "Directory not found: %s"})json", root_path);
 	}
 
 	Array results;
-	_collect_files(root_path, recursive, include_hidden, max_entries, results);
+	_collect_files(_to_absolute(root_path), recursive, include_hidden, max_entries, results);
 
 	Dictionary result;
 	result["path"] = root_path;
@@ -58,7 +65,7 @@ String FileTools::search_files(const Dictionary &p_args) {
 	String root_path = _normalize_path(p_args.get("path", "res://"));
 	String pattern = String(p_args.get("pattern", "")).strip_edges();
 	if (pattern.is_empty()) {
-		return R"({"error": "'pattern' is required."})";
+		return R"json({"error": "'pattern' is required."})json";
 	}
 
 	String mode = String(p_args.get("mode", "path")).to_lower();
@@ -66,7 +73,7 @@ String FileTools::search_files(const Dictionary &p_args) {
 	int max_results = CLAMP(int(p_args.get("max_results", 100)), 1, 2000);
 
 	Array matches;
-	_search_files_recursive(root_path, pattern, mode, recursive, max_results, matches);
+	_search_files_recursive(_to_absolute(root_path), pattern, mode, recursive, max_results, matches);
 
 	Dictionary result;
 	result["path"] = root_path;
@@ -83,10 +90,10 @@ String FileTools::search_files(const Dictionary &p_args) {
 String FileTools::file_exists(const Dictionary &p_args) {
 	String path = _normalize_path(p_args.get("path", ""));
 	if (path.is_empty()) {
-		return R"({"error": "'path' is required."})";
+		return R"json({"error": "'path' is required."})json";
 	}
 
-	bool exists = FileAccess::file_exists(path) ||
+	bool exists = FileAccess::exists(path) ||
 			DirAccess::dir_exists_absolute(path) ||
 			ResourceLoader::exists(path);
 
@@ -102,17 +109,17 @@ String FileTools::file_exists(const Dictionary &p_args) {
 String FileTools::read_file(const Dictionary &p_args) {
 	String path = _normalize_path(p_args.get("path", ""));
 	if (path.is_empty()) {
-		return R"({"error": "'path' is required."})";
+		return R"json({"error": "'path' is required."})json";
 	}
-	if (!FileAccess::file_exists(path)) {
-		return vformat(R"({"error": "File not found: %s"})", path);
+	if (!FileAccess::exists(path)) {
+		return vformat(R"json({"error": "File not found: %s"})json", path);
 	}
 
 	int max_chars = CLAMP(int(p_args.get("max_chars", 12000)), 200, 500000);
 
-	Ref<FileAccess> file = FileAccess::open(path, FileAccess::READ);
+	Ref<FileAccess> file = FileAccess::open(_to_absolute(path), FileAccess::READ);
 	if (file.is_null()) {
-		return vformat(R"({"error": "Failed to open file: %s"})", path);
+		return vformat(R"json({"error": "Failed to open file: %s"})json", path);
 	}
 
 	String text = file->get_as_utf8_string();
@@ -132,19 +139,19 @@ String FileTools::read_file(const Dictionary &p_args) {
 String FileTools::write_file(const Dictionary &p_args) {
 	String path = _normalize_path(p_args.get("path", ""));
 	if (path.is_empty()) {
-		return R"({"error": "'path' is required."})";
+		return R"json({"error": "'path' is required."})json";
 	}
 
 	String ensure_err = _ensure_parent_dir(path);
 	if (!ensure_err.is_empty()) {
-		return vformat(R"({"error": "Failed to create parent directory for %s"})", path);
+		return vformat(R"json({"error": "Failed to create parent directory for %s"})json", path);
 	}
 
 	String content = p_args.get("content", "");
 
-	Ref<FileAccess> file = FileAccess::open(path, FileAccess::WRITE);
+	Ref<FileAccess> file = FileAccess::open(_to_absolute(path), FileAccess::WRITE);
 	if (file.is_null()) {
-		return vformat(R"({"error": "Failed to open file for writing: %s"})", path);
+		return vformat(R"json({"error": "Failed to open file for writing: %s"})json", path);
 	}
 
 	file->store_string(content);
@@ -162,16 +169,16 @@ String FileTools::write_file(const Dictionary &p_args) {
 String FileTools::delete_file(const Dictionary &p_args) {
 	String path = _normalize_path(p_args.get("path", ""));
 	if (path.is_empty()) {
-		return R"({"error": "'path' is required."})";
+		return R"json({"error": "'path' is required."})json";
 	}
 
 	Error err = DirAccess::remove_absolute(path);
 	if (err != OK) {
-		return vformat(R"({"error": "Failed to delete '%s' (code %d)."})", path, (int)err);
+		return vformat(R"json({"error": "Failed to delete '%s' (code %d)."})json", path, (int)err);
 	}
 
 	_refresh_filesystem();
-	return vformat(R"({"deleted": "%s"})", path);
+	return vformat(R"json({"deleted": "%s"})json", path);
 }
 
 // ============================================================
@@ -181,17 +188,17 @@ String FileTools::move_file(const Dictionary &p_args) {
 	String from_path = _normalize_path(p_args.get("from_path", ""));
 	String to_path = _normalize_path(p_args.get("to_path", ""));
 	if (from_path.is_empty() || to_path.is_empty()) {
-		return R"({"error": "'from_path' and 'to_path' are required."})";
+		return R"json({"error": "'from_path' and 'to_path' are required."})json";
 	}
 
 	String ensure_err = _ensure_parent_dir(to_path);
 	if (!ensure_err.is_empty()) {
-		return vformat(R"({"error": "Failed to create parent directory for %s"})", to_path);
+		return vformat(R"json({"error": "Failed to create parent directory for %s"})json", to_path);
 	}
 
 	Error err = DirAccess::rename_absolute(from_path, to_path);
 	if (err != OK) {
-		return vformat(R"({"error": "Failed to move '%s' to '%s' (code %d)."})", from_path, to_path, (int)err);
+		return vformat(R"json({"error": "Failed to move '%s' to '%s' (code %d)."})json", from_path, to_path, (int)err);
 	}
 
 	_refresh_filesystem();
@@ -208,17 +215,17 @@ String FileTools::copy_file(const Dictionary &p_args) {
 	String from_path = _normalize_path(p_args.get("from_path", ""));
 	String to_path = _normalize_path(p_args.get("to_path", ""));
 	if (from_path.is_empty() || to_path.is_empty()) {
-		return R"({"error": "'from_path' and 'to_path' are required."})";
+		return R"json({"error": "'from_path' and 'to_path' are required."})json";
 	}
 
 	String ensure_err = _ensure_parent_dir(to_path);
 	if (!ensure_err.is_empty()) {
-		return vformat(R"({"error": "Failed to create parent directory for %s"})", to_path);
+		return vformat(R"json({"error": "Failed to create parent directory for %s"})json", to_path);
 	}
 
 	Error err = DirAccess::copy_absolute(from_path, to_path);
 	if (err != OK) {
-		return vformat(R"({"error": "Failed to copy '%s' to '%s' (code %d)."})", from_path, to_path, (int)err);
+		return vformat(R"json({"error": "Failed to copy '%s' to '%s' (code %d)."})json", from_path, to_path, (int)err);
 	}
 
 	_refresh_filesystem();
@@ -234,7 +241,7 @@ String FileTools::copy_file(const Dictionary &p_args) {
 String FileTools::find_usages(const Dictionary &p_args) {
 	String symbol = String(p_args.get("symbol", "")).strip_edges();
 	if (symbol.is_empty()) {
-		return R"({"error": "'symbol' is required."})";
+		return R"json({"error": "'symbol' is required."})json";
 	}
 
 	String root_path = _normalize_path(p_args.get("path", "res://"));
@@ -248,12 +255,12 @@ String FileTools::find_usages(const Dictionary &p_args) {
 	}
 
 	Array files;
-	if (FileAccess::file_exists(root_path)) {
+	if (FileAccess::exists(root_path)) {
 		if (_matches_extension(root_path, text_exts)) {
 			files.push_back(root_path);
 		}
 	} else {
-		_collect_matching_files(root_path, true, 5000, files, text_exts);
+		_collect_matching_files(_to_absolute(root_path), true, 5000, files, text_exts);
 	}
 
 	String needle = case_sensitive ? symbol : symbol.to_lower();
@@ -261,7 +268,7 @@ String FileTools::find_usages(const Dictionary &p_args) {
 
 	for (int f = 0; f < files.size() && matches.size() < (size_t)max_results; f++) {
 		String file_path = files[f];
-		Ref<FileAccess> file = FileAccess::open(file_path, FileAccess::READ);
+		Ref<FileAccess> file = FileAccess::open(_to_absolute(file_path), FileAccess::READ);
 		if (file.is_null()) {
 			continue;
 		}
@@ -356,7 +363,7 @@ void FileTools::_collect_files(const String &p_path, bool p_recursive, bool p_in
 		return;
 	}
 
-	Ref<DirAccess> dir = DirAccess::open(p_path);
+	Ref<DirAccess> dir = DirAccess::open(_to_absolute(p_path));
 	if (dir.is_null()) {
 		return;
 	}
@@ -364,6 +371,10 @@ void FileTools::_collect_files(const String &p_path, bool p_recursive, bool p_in
 	dir->list_dir_begin();
 	String item = dir->get_next();
 	while (!item.is_empty()) {
+		if (item == "." || item == "..") {
+			item = dir->get_next();
+			continue;
+		}
 		if (p_results.size() >= p_max_entries) {
 			break;
 		}
@@ -397,7 +408,7 @@ void FileTools::_collect_matching_files(const String &p_path, bool p_recursive, 
 		return;
 	}
 
-	Ref<DirAccess> dir = DirAccess::open(p_path);
+	Ref<DirAccess> dir = DirAccess::open(_to_absolute(p_path));
 	if (dir.is_null()) {
 		return;
 	}
@@ -405,6 +416,10 @@ void FileTools::_collect_matching_files(const String &p_path, bool p_recursive, 
 	dir->list_dir_begin();
 	String item = dir->get_next();
 	while (!item.is_empty()) {
+		if (item == "." || item == "..") {
+			item = dir->get_next();
+			continue;
+		}
 		if (p_results.size() >= p_max_entries) {
 			break;
 		}
@@ -436,7 +451,7 @@ void FileTools::_search_files_recursive(const String &p_path, const String &p_pa
 		return;
 	}
 
-	Ref<DirAccess> dir = DirAccess::open(p_path);
+	Ref<DirAccess> dir = DirAccess::open(_to_absolute(p_path));
 	if (dir.is_null()) {
 		return;
 	}
@@ -451,6 +466,10 @@ void FileTools::_search_files_recursive(const String &p_path, const String &p_pa
 	dir->list_dir_begin();
 	String item = dir->get_next();
 	while (!item.is_empty()) {
+		if (item == "." || item == "..") {
+			item = dir->get_next();
+			continue;
+		}
 		if (p_matches.size() >= (size_t)p_max_results) {
 			break;
 		}

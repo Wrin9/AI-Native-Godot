@@ -9,13 +9,15 @@
 #include "mcp_snapshot.h"
 
 #include "core/os/os.h"
-#include "core/crypto/crypto_core.h"
 #include "core/templates/hash_set.h"
 #include "scene/main/node.h"
 #include "scene/main/scene_tree.h"
+#include "scene/main/window.h"
 #include "editor/editor_node.h"
-#include "editor/editor_plugin.h"
-#include "editor/editor_file_system.h"
+#include "core/config/project_settings.h"
+#include "editor/plugins/editor_plugin.h"
+#include "editor/file_system/editor_file_system.h"
+#include "core/io/json.h"
 
 // ============================================================
 // 构造 / 析构
@@ -118,7 +120,7 @@ Dictionary MCPSnapshot::get_scene_tree_snapshot(int p_max_depth) {
 		return _cached_scene_tree;
 	}
 
-	Node *root = tree->get_root();
+	Node *root = Object::cast_to<Node>(tree->get_root());
 	if (!root) {
 		result["error"] = "No root node";
 		return result;
@@ -166,7 +168,7 @@ Dictionary MCPSnapshot::get_selection_snapshot() const {
 
 	// 获取编辑器选择 - 通过 EditorPlugin 的 get_editor_interface
 	// 这里提供基础框架，具体实现依赖 EditorInterface
-	Node *root = tree->get_root();
+	Node *root = Object::cast_to<Node>(tree->get_root());
 	if (!root) return result;
 
 	// 尝试获取编辑器选择
@@ -347,8 +349,8 @@ Dictionary MCPSnapshot::_node_to_dict(Node *p_node) const {
 String MCPSnapshot::_compute_hash(const Dictionary &p_snapshot) const {
 	// 使用 JSON 序列化后计算哈希
 	String json = JSON::stringify(p_snapshot, "", true);
-	String hash = CryptoCore::md5_text(json.utf8().ptr(), json.utf8_length());
-	return hash;
+	unsigned int hash = json.hash();
+	return String::num_uint64(hash);
 }
 
 void MCPSnapshot::_collect_project_files(const String &p_path, Array &p_files, int p_depth) const {

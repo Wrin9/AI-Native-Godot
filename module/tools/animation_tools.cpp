@@ -8,12 +8,12 @@
 #include "animation_tools.h"
 
 #include "editor/editor_interface.h"
-#include "editor/editor_selection.h"
+#include "editor/editor_data.h"
 #include "editor/plugins/editor_plugin.h"
 #include "scene/main/window.h"
 #include "scene/main/scene_tree.h"
 #include "scene/animation/animation_player.h"
-#include "scene/animation/animation_library.h"
+#include "scene/resources/animation_library.h"
 #include "scene/resources/animation.h"
 #include "core/io/json.h"
 #include "core/object/class_db.h"
@@ -29,7 +29,7 @@ void AnimationTools::set_editor_plugin(EditorPlugin *p_plugin) {
 String AnimationTools::create_animation_player(const Dictionary &p_args) {
 	Node *scene_root = _get_edited_scene_root();
 	if (!scene_root) {
-		return R"({"error": "No edited scene is open."})";
+		return R"json({"error": "No edited scene is open."})json";
 	}
 
 	String parent_path = String(p_args.get("parent_path", "")).strip_edges();
@@ -63,12 +63,12 @@ String AnimationTools::create_animation_player(const Dictionary &p_args) {
 String AnimationTools::create_animation_clip(const Dictionary &p_args) {
 	AnimationPlayer *player = _resolve_animation_player(String(p_args.get("animation_player_path", "")).strip_edges());
 	if (!player) {
-		return R"({"error": "AnimationPlayer not found."})";
+		return R"json({"error": "AnimationPlayer not found."})json";
 	}
 
 	String animation_name = String(p_args.get("animation_name", "")).strip_edges();
 	if (animation_name.is_empty()) {
-		return R"({"error": "'animation_name' is required."})";
+		return R"json({"error": "'animation_name' is required."})json";
 	}
 
 	String library_name = String(p_args.get("library_name", "")).strip_edges();
@@ -104,19 +104,19 @@ String AnimationTools::create_animation_clip(const Dictionary &p_args) {
 String AnimationTools::add_animation_track(const Dictionary &p_args) {
 	AnimationPlayer *player = _resolve_animation_player(String(p_args.get("animation_player_path", "")).strip_edges());
 	if (!player) {
-		return R"({"error": "AnimationPlayer not found."})";
+		return R"json({"error": "AnimationPlayer not found."})json";
 	}
 
 	String animation_name = String(p_args.get("animation_name", "")).strip_edges();
 	if (animation_name.is_empty()) {
-		return R"({"error": "'animation_name' is required."})";
+		return R"json({"error": "'animation_name' is required."})json";
 	}
 
 	String library_name = String(p_args.get("library_name", "")).strip_edges();
 	AnimationLibrary *library = _get_or_create_animation_library(player, library_name);
 
 	if (!library->has_animation(animation_name)) {
-		return vformat(R"({"error": "Animation '%s' not found."})", animation_name);
+		return vformat(R"json({"error": "Animation '%s' not found."})json", animation_name);
 	}
 
 	Ref<Animation> animation = library->get_animation(animation_name);
@@ -142,7 +142,7 @@ String AnimationTools::add_animation_track(const Dictionary &p_args) {
 			}
 			Dictionary key_data = keys[i];
 			double time = double(key_data.get("time", 0.0));
-			Variant value = key_data.get("value");
+			Variant value = key_data.get("value", Variant());
 			float transition = float(key_data.get("transition", 1.0));
 			animation->track_insert_key(track_index, time, value, transition);
 		}
@@ -164,22 +164,24 @@ String AnimationTools::add_animation_track(const Dictionary &p_args) {
 String AnimationTools::list_animations(const Dictionary &p_args) {
 	AnimationPlayer *player = _resolve_animation_player(String(p_args.get("animation_player_path", "")).strip_edges());
 	if (!player) {
-		return R"({"error": "AnimationPlayer not found."})";
+		return R"json({"error": "AnimationPlayer not found."})json";
 	}
 
 	Array libraries;
-	TypedArray<StringName> library_list = player->get_animation_library_list();
+	TypedArray<StringName> library_list = player->call("get_animation_library_list");
 	for (int i = 0; i < library_list.size(); i++) {
 		String library_name = String(library_list[i]);
-		AnimationLibrary *library = player->get_animation_library(library_name);
+		Ref<AnimationLibrary> library_ref = player->get_animation_library(library_name);
+		if (library_ref.is_null()) { continue; }
+		AnimationLibrary *library = library_ref.ptr();
 		if (!library) {
 			continue;
 		}
 
 		Array animations;
-		PackedStringArray anim_list = library->get_animation_list();
-		for (int j = 0; j < anim_list.size(); j++) {
-			String anim_name = anim_list[j];
+		Array anim_list_arr = library->call("get_animation_list");
+		for (int j = 0; j < anim_list_arr.size(); j++) {
+			String anim_name = anim_list_arr[j];
 			Ref<Animation> anim = library->get_animation(anim_name);
 			if (anim.is_null()) {
 				continue;
@@ -210,12 +212,12 @@ String AnimationTools::list_animations(const Dictionary &p_args) {
 String AnimationTools::play_animation(const Dictionary &p_args) {
 	AnimationPlayer *player = _resolve_animation_player(String(p_args.get("animation_player_path", "")).strip_edges());
 	if (!player) {
-		return R"({"error": "AnimationPlayer not found."})";
+		return R"json({"error": "AnimationPlayer not found."})json";
 	}
 
 	String animation_name = String(p_args.get("animation_name", "")).strip_edges();
 	if (animation_name.is_empty()) {
-		return R"({"error": "'animation_name' is required."})";
+		return R"json({"error": "'animation_name' is required."})json";
 	}
 
 	double custom_blend = double(p_args.get("custom_blend", -1.0));
@@ -224,7 +226,7 @@ String AnimationTools::play_animation(const Dictionary &p_args) {
 
 	player->play(animation_name, custom_blend, custom_speed, from_end);
 
-	return vformat(R"({"playing": "%s"})", animation_name);
+	return vformat(R"json({"playing": "%s"})json", animation_name);
 }
 
 // ============================================================
@@ -258,11 +260,23 @@ Node *AnimationTools::_resolve_node_path(const String &p_path) const {
 	if (String(scene_root->get_path()) == identifier) {
 		return scene_root;
 	}
-	if (identifier.begins_with("/")) {
-		SceneTree *tree = scene_root->get_tree();
-		if (tree && tree->get_root()) {
-			return tree->get_root()->get_node_or_null(NodePath(identifier));
-		}
+	// Try relative path from scene root first
+	String root_name = scene_root->get_name();
+	String relative;
+	if (identifier.begins_with("/" + root_name + "/")) {
+		relative = identifier.substr(root_name.length() + 2);
+	} else if (identifier.begins_with("/")) {
+		relative = identifier.substr(1);
+	} else {
+		relative = identifier;
+	}
+	
+	Node *found = scene_root->get_node_or_null(NodePath(relative));
+	if (found) {
+		return found;
+	}
+	if (identifier == "/" + root_name || identifier == root_name) {
+		return scene_root;
 	}
 	return scene_root->get_node_or_null(NodePath(identifier));
 }
@@ -315,7 +329,7 @@ void AnimationTools::_select_node(Node *p_node) const {
 
 AnimationLibrary *AnimationTools::_get_or_create_animation_library(AnimationPlayer *p_player, const String &p_library_name) const {
 	if (p_player->has_animation_library(p_library_name)) {
-		return p_player->get_animation_library(p_library_name);
+		return p_player->get_animation_library(p_library_name).ptr();
 	}
 	AnimationLibrary *library = memnew(AnimationLibrary);
 	p_player->add_animation_library(p_library_name, library);

@@ -1,3 +1,4 @@
+#include "core/version.h"
 /**
  * project_tools.cpp - 项目工具实现
  *
@@ -8,6 +9,7 @@
 #include "project_tools.h"
 
 #include "editor/editor_interface.h"
+#include "core/io/config_file.h"
 #include "editor/plugins/editor_plugin.h"
 #include "core/io/dir_access.h"
 #include "core/io/file_access.h"
@@ -18,6 +20,13 @@
 
 void ProjectTools::set_editor_plugin(EditorPlugin *p_plugin) {
 	_plugin = p_plugin;
+}
+
+String ProjectTools::_to_absolute(const String &p_path) const {
+	if (p_path.begins_with("res://") || p_path.begins_with("user://")) {
+		return ProjectSettings::get_singleton()->globalize_path(p_path);
+	}
+	return p_path;
 }
 
 String ProjectTools::get_project_info(const Dictionary &p_args) {
@@ -34,9 +43,9 @@ String ProjectTools::get_project_info(const Dictionary &p_args) {
 	info["godot_version"] = godot_version;
 
 	Array input_actions;
-	PackedStringArray actions = InputMap::get_singleton()->get_actions();
-	for (int i = 0; i < actions.size(); i++) {
-		input_actions.push_back(String(actions[i]));
+	TypedArray<StringName> actions_arr = InputMap::get_singleton()->get_actions();
+	for (int i = 0; i < actions_arr.size(); i++) {
+		input_actions.push_back(String(actions_arr[i]));
 	}
 	info["input_actions"] = input_actions;
 	info["autoloads"] = _list_autoloads_internal();
@@ -55,7 +64,7 @@ String ProjectTools::list_project_settings(const Dictionary &p_args) {
 	int max_results = CLAMP(int(p_args.get("max_results", 500)), 1, 5000);
 
 	Array settings;
-	TypedArray<Dictionary> prop_list = ProjectSettings::get_singleton()->get_property_list();
+	TypedArray<Dictionary> prop_list = ProjectSettings::get_singleton()->call("get_property_list");
 	for (int i = 0; i < prop_list.size() && settings.size() < (unsigned)max_results; i++) {
 		Dictionary prop_info = prop_list[i];
 		String name = String(prop_info.get("name", ""));
@@ -86,10 +95,10 @@ String ProjectTools::list_project_settings(const Dictionary &p_args) {
 String ProjectTools::get_project_setting(const Dictionary &p_args) {
 	String key = String(p_args.get("key", "")).strip_edges();
 	if (key.is_empty()) {
-		return R"({"error": "'key' is required."})";
+		return R"json({"error": "'key' is required."})json";
 	}
 	if (!ProjectSettings::get_singleton()->has_setting(key)) {
-		return vformat(R"({"error": "Project setting not found: %s"})", key);
+		return vformat(R"json({"error": "Project setting not found: %s"})json", key);
 	}
 	Dictionary result;
 	result["key"] = key;
@@ -100,10 +109,10 @@ String ProjectTools::get_project_setting(const Dictionary &p_args) {
 String ProjectTools::set_project_setting(const Dictionary &p_args) {
 	String key = String(p_args.get("key", "")).strip_edges();
 	if (key.is_empty()) {
-		return R"({"error": "'key' is required."})";
+		return R"json({"error": "'key' is required."})json";
 	}
 	if (!p_args.has("value")) {
-		return R"({"error": "'value' is required."})";
+		return R"json({"error": "'value' is required."})json";
 	}
 
 	ProjectSettings::get_singleton()->set_setting(key, p_args["value"]);
@@ -126,9 +135,9 @@ String ProjectTools::list_project_features(const Dictionary &p_args) {
 	result["rendering_method"] = String(ProjectSettings::get_singleton()->get_setting("rendering/renderer/rendering_method", ""));
 
 	Array input_actions;
-	PackedStringArray actions = InputMap::get_singleton()->get_actions();
-	for (int i = 0; i < actions.size(); i++) {
-		input_actions.push_back(String(actions[i]));
+	TypedArray<StringName> actions_arr = InputMap::get_singleton()->get_actions();
+	for (int i = 0; i < actions_arr.size(); i++) {
+		input_actions.push_back(String(actions_arr[i]));
 	}
 	result["input_actions"] = input_actions;
 	result["autoloads"] = _list_autoloads_internal();
@@ -139,7 +148,7 @@ String ProjectTools::list_addons(const Dictionary &p_args) {
 	String addons_dir = "res://addons";
 	Array addons;
 
-	Ref<DirAccess> dir = DirAccess::open(addons_dir);
+	Ref<DirAccess> dir = DirAccess::open(_to_absolute(addons_dir));
 	if (dir.is_null()) {
 		Dictionary result;
 		result["addons"] = addons;
@@ -154,7 +163,7 @@ String ProjectTools::list_addons(const Dictionary &p_args) {
 		Dictionary info;
 		info["name"] = addon_name;
 		info["path"] = addons_dir.path_join(addon_name);
-		info["has_plugin_cfg"] = FileAccess::file_exists(plugin_cfg_path);
+		info["has_plugin_cfg"] = FileAccess::exists(plugin_cfg_path);
 
 		// 检查是否启用
 		bool is_enabled = false;
@@ -168,7 +177,7 @@ String ProjectTools::list_addons(const Dictionary &p_args) {
 		info["enabled"] = is_enabled;
 
 		// 读取 plugin.cfg 元数据
-		if (FileAccess::file_exists(plugin_cfg_path)) {
+		if (FileAccess::exists(plugin_cfg_path)) {
 			Ref<ConfigFile> config;
 			config.instantiate();
 			Error cfg_err = config->load(plugin_cfg_path);
@@ -192,10 +201,10 @@ String ProjectTools::list_addons(const Dictionary &p_args) {
 String ProjectTools::set_addon_enabled(const Dictionary &p_args) {
 	String addon_name = String(p_args.get("addon", "")).strip_edges();
 	if (addon_name.is_empty()) {
-		return R"({"error": "'addon' is required."})";
+		return R"json({"error": "'addon' is required."})json";
 	}
 	if (!p_args.has("enabled")) {
-		return R"({"error": "'enabled' is required."})";
+		return R"json({"error": "'enabled' is required."})json";
 	}
 
 	bool enabled = p_args["enabled"];
@@ -246,7 +255,7 @@ String ProjectTools::set_autoload(const Dictionary &p_args) {
 	String name = String(p_args.get("name", "")).strip_edges();
 	String path = _normalize_path(p_args.get("path", ""));
 	if (name.is_empty() || path.is_empty()) {
-		return R"({"error": "'name' and 'path' are required."})";
+		return R"json({"error": "'name' and 'path' are required."})json";
 	}
 
 	String key = vformat("autoload/%s", name);
@@ -271,12 +280,12 @@ String ProjectTools::set_autoload(const Dictionary &p_args) {
 String ProjectTools::remove_autoload(const Dictionary &p_args) {
 	String name = String(p_args.get("name", "")).strip_edges();
 	if (name.is_empty()) {
-		return R"({"error": "'name' is required."})";
+		return R"json({"error": "'name' is required."})json";
 	}
 
 	String key = vformat("autoload/%s", name);
 	if (!ProjectSettings::get_singleton()->has_setting(key)) {
-		return vformat(R"({"error": "Autoload not found: %s"})", name);
+		return vformat(R"json({"error": "Autoload not found: %s"})json", name);
 	}
 
 	ProjectSettings::get_singleton()->set_setting(key, Variant());
@@ -284,14 +293,14 @@ String ProjectTools::remove_autoload(const Dictionary &p_args) {
 	if (save_changes) {
 		ProjectSettings::get_singleton()->save();
 	}
-	return vformat(R"({"removed": "%s"})", name);
+	return vformat(R"json({"removed": "%s"})json", name);
 }
 
 String ProjectTools::list_input_actions(const Dictionary &p_args) {
 	Array actions_list;
-	PackedStringArray actions = InputMap::get_singleton()->get_actions();
-	for (int i = 0; i < actions.size(); i++) {
-		actions_list.push_back(_build_input_action_info(String(actions[i])));
+	TypedArray<StringName> actions_arr = InputMap::get_singleton()->get_actions();
+	for (int i = 0; i < actions_arr.size(); i++) {
+		actions_list.push_back(_build_input_action_info(String(actions_arr[i])));
 	}
 
 	Dictionary result;
@@ -303,10 +312,10 @@ String ProjectTools::list_input_actions(const Dictionary &p_args) {
 String ProjectTools::get_input_action(const Dictionary &p_args) {
 	String action_name = String(p_args.get("action", "")).strip_edges();
 	if (action_name.is_empty()) {
-		return R"({"error": "'action' is required."})";
+		return R"json({"error": "'action' is required."})json";
 	}
 	if (!InputMap::get_singleton()->has_action(action_name)) {
-		return vformat(R"({"error": "Input action not found: %s"})", action_name);
+		return vformat(R"json({"error": "Input action not found: %s"})json", action_name);
 	}
 	return JSON::stringify(_build_input_action_info(action_name), "\t");
 }
@@ -314,7 +323,7 @@ String ProjectTools::get_input_action(const Dictionary &p_args) {
 String ProjectTools::add_input_action(const Dictionary &p_args) {
 	String action_name = String(p_args.get("action", "")).strip_edges();
 	if (action_name.is_empty()) {
-		return R"({"error": "'action' is required."})";
+		return R"json({"error": "'action' is required."})json";
 	}
 
 	if (!InputMap::get_singleton()->has_action(action_name)) {
@@ -323,7 +332,7 @@ String ProjectTools::add_input_action(const Dictionary &p_args) {
 	}
 
 	// 添加事件
-	Variant events_var = p_args.get("events");
+	Variant events_var = p_args.get("events", Variant());
 	if (events_var.get_type() == Variant::ARRAY) {
 		Array events = events_var;
 		for (int i = 0; i < events.size(); i++) {
@@ -339,7 +348,7 @@ String ProjectTools::add_input_action(const Dictionary &p_args) {
 				key_event->set_pressed(bool(event_data.get("pressed", true)));
 
 				int keycode = 0;
-				Variant key_var = event_data.get("key", event_data.get("keycode"));
+				Variant key_var = event_data.get("key", event_data.get("keycode", Variant()));
 				if (key_var.get_type() == Variant::INT) {
 					keycode = int(key_var);
 				} else if (key_var.get_type() == Variant::STRING) {
@@ -371,10 +380,10 @@ String ProjectTools::add_input_action(const Dictionary &p_args) {
 String ProjectTools::remove_input_action(const Dictionary &p_args) {
 	String action_name = String(p_args.get("action", "")).strip_edges();
 	if (action_name.is_empty()) {
-		return R"({"error": "'action' is required."})";
+		return R"json({"error": "'action' is required."})json";
 	}
 	if (!InputMap::get_singleton()->has_action(action_name)) {
-		return vformat(R"({"error": "Input action not found: %s"})", action_name);
+		return vformat(R"json({"error": "Input action not found: %s"})json", action_name);
 	}
 
 	InputMap::get_singleton()->erase_action(action_name);
@@ -382,7 +391,7 @@ String ProjectTools::remove_input_action(const Dictionary &p_args) {
 	if (save_changes) {
 		ProjectSettings::get_singleton()->save();
 	}
-	return vformat(R"({"removed": "%s"})", action_name);
+	return vformat(R"json({"removed": "%s"})json", action_name);
 }
 
 void ProjectTools::_bind_methods() {
@@ -409,7 +418,7 @@ void ProjectTools::_bind_methods() {
 
 Array ProjectTools::_list_autoloads_internal() const {
 	Array autoloads;
-	TypedArray<Dictionary> prop_list = ProjectSettings::get_singleton()->get_property_list();
+	TypedArray<Dictionary> prop_list = ProjectSettings::get_singleton()->call("get_property_list");
 	for (int i = 0; i < prop_list.size(); i++) {
 		Dictionary prop_info = prop_list[i];
 		String name = String(prop_info.get("name", ""));
@@ -430,7 +439,7 @@ Dictionary ProjectTools::_build_input_action_info(const String &p_action_name) c
 	info["deadzone"] = InputMap::get_singleton()->action_get_deadzone(p_action_name);
 
 	Array events;
-	Array action_events = InputMap::get_singleton()->action_get_events(p_action_name);
+	Array action_events = InputMap::get_singleton()->call("action_get_events", p_action_name);
 	for (int i = 0; i < action_events.size(); i++) {
 		Ref<InputEvent> event = action_events[i];
 		if (event.is_valid()) {

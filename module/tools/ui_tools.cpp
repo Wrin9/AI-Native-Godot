@@ -8,7 +8,8 @@
 #include "ui_tools.h"
 
 #include "editor/editor_interface.h"
-#include "editor/editor_selection.h"
+#include "editor/editor_undo_redo_manager.h"
+#include "editor/editor_data.h"
 #include "editor/plugins/editor_plugin.h"
 #include "scene/main/window.h"
 #include "scene/main/scene_tree.h"
@@ -20,7 +21,7 @@
 #include "scene/gui/box_container.h"
 #include "scene/gui/grid_container.h"
 #include "scene/gui/margin_container.h"
-#include "scene/2d/canvas_layer.h"
+#include "scene/main/canvas_layer.h"
 #include "scene/resources/texture.h"
 #include "scene/resources/style_box.h"
 #include "scene/resources/font.h"
@@ -40,7 +41,7 @@ void UITools::set_editor_plugin(EditorPlugin *p_plugin) {
 String UITools::create_ui_root(const Dictionary &p_args) {
 	Node *scene_root = _get_edited_scene_root();
 	if (!scene_root) {
-		return R"({"error": "No edited scene is open."})";
+		return R"json({"error": "No edited scene is open."})json";
 	}
 
 	String kind = String(p_args.get("kind", "canvas_layer")).to_lower();
@@ -75,7 +76,7 @@ String UITools::create_ui_root(const Dictionary &p_args) {
 		created_root = control;
 		primary_control = control;
 	} else {
-		return vformat(R"({"error": "Unsupported ui root kind '%s'.'})", kind);
+		return vformat(R"json({"error": "Unsupported ui root kind '%s'.'})json", kind);
 	}
 
 	if (bool(p_args.get("select_new_node", true))) {
@@ -96,16 +97,16 @@ String UITools::create_ui_root(const Dictionary &p_args) {
 String UITools::create_control(const Dictionary &p_args) {
 	String control_type = String(p_args.get("control_type", "")).strip_edges();
 	if (control_type.is_empty()) {
-		return R"({"error": "'control_type' is required."})";
+		return R"json({"error": "'control_type' is required."})json";
 	}
 
 	Node *scene_root = _get_edited_scene_root();
 	if (!scene_root) {
-		return R"({"error": "No edited scene is open."})";
+		return R"json({"error": "No edited scene is open."})json";
 	}
 
 	if (!ClassDB::class_exists(control_type)) {
-		return vformat(R"({"error": "Unknown control type '%s'.'})", control_type);
+		return vformat(R"json({"error": "Unknown control type '%s'.'})json", control_type);
 	}
 
 	Object *obj = ClassDB::instantiate(control_type.utf8().get_data());
@@ -113,7 +114,7 @@ String UITools::create_control(const Dictionary &p_args) {
 		if (obj) {
 			memdelete(obj);
 		}
-		return vformat(R"({"error": "'%s' is not instantiable as a Control."})", control_type);
+		return vformat(R"json({"error": "'%s' is not instantiable as a Control."})json", control_type);
 	}
 
 	Control *control = Object::cast_to<Control>(obj);
@@ -150,10 +151,10 @@ String UITools::create_control(const Dictionary &p_args) {
 		_apply_layout_preset(control, String(p_args["layout_preset"]));
 	}
 	if (p_args.has("horizontal_size_flags")) {
-		control->set_size_flags_horizontal(_parse_size_flags(p_args["horizontal_size_flags"]));
+		control->set_h_size_flags(_parse_size_flags(p_args["horizontal_size_flags"]));
 	}
 	if (p_args.has("vertical_size_flags")) {
-		control->set_size_flags_vertical(_parse_size_flags(p_args["vertical_size_flags"]));
+		control->set_v_size_flags(_parse_size_flags(p_args["vertical_size_flags"]));
 	}
 	if (p_args.has("theme_type_variation") && _has_property(control, "theme_type_variation")) {
 		control->set("theme_type_variation", String(p_args["theme_type_variation"]));
@@ -233,9 +234,11 @@ String UITools::create_texture_rect(const Dictionary &p_args) {
 String UITools::create_container(const Dictionary &p_args) {
 	String container_type = String(p_args.get("container_type", "")).strip_edges();
 	if (container_type.is_empty()) {
-		return R"({"error": "'container_type' is required."})";
+		return R"json({"error": "'container_type' is required."})json";
 	}
-	return create_control(p_args);
+	Dictionary modified_args = p_args;
+	modified_args["control_type"] = container_type;
+	return create_control(modified_args);
 }
 
 // ============================================================
@@ -245,7 +248,7 @@ String UITools::set_control_layout(const Dictionary &p_args) {
 	String node_path = String(p_args.get("node_path", "")).strip_edges();
 	Control *control = _resolve_control(node_path);
 	if (!control) {
-		return R"({"error": "Control not found."})";
+		return R"json({"error": "Control not found."})json";
 	}
 
 	Dictionary changes;
@@ -303,7 +306,7 @@ String UITools::set_control_size_flags(const Dictionary &p_args) {
 	String node_path = String(p_args.get("node_path", "")).strip_edges();
 	Control *control = _resolve_control(node_path);
 	if (!control) {
-		return R"({"error": "Control not found."})";
+		return R"json({"error": "Control not found."})json";
 	}
 
 	Dictionary changes;
@@ -331,7 +334,7 @@ String UITools::set_control_text(const Dictionary &p_args) {
 	String node_path = String(p_args.get("node_path", "")).strip_edges();
 	Control *control = _resolve_control(node_path);
 	if (!control) {
-		return R"({"error": "Control not found."})";
+		return R"json({"error": "Control not found."})json";
 	}
 
 	String text = String(p_args.get("text", ""));
@@ -341,7 +344,7 @@ String UITools::set_control_text(const Dictionary &p_args) {
 	}
 
 	if (!_has_property(control, property_name)) {
-		return vformat(R"({"error": "Control does not expose property '%s'.'})", property_name);
+		return vformat(R"json({"error": "Control does not expose property '%s'.'})json", property_name);
 	}
 
 	Dictionary changes;
@@ -362,17 +365,17 @@ String UITools::set_control_theme_override(const Dictionary &p_args) {
 	String node_path = String(p_args.get("node_path", "")).strip_edges();
 	Control *control = _resolve_control(node_path);
 	if (!control) {
-		return R"({"error": "Control not found."})";
+		return R"json({"error": "Control not found."})json";
 	}
 
 	String override_type = String(p_args.get("override_type", "")).to_lower();
 	String name = String(p_args.get("name", "")).strip_edges();
 	if (override_type.is_empty() || name.is_empty()) {
-		return R"({"error": "'override_type' and 'name' are required."})";
+		return R"json({"error": "'override_type' and 'name' are required."})json";
 	}
 
 	if (override_type == "color") {
-		control->add_theme_color_override(name, _to_color(p_args.get("value")));
+		control->add_theme_color_override(name, _to_color(p_args.get("value", Variant())));
 	} else if (override_type == "constant") {
 		control->add_theme_constant_override(name, int(p_args.get("value", 0)));
 	} else if (override_type == "font_size") {
@@ -381,18 +384,18 @@ String UITools::set_control_theme_override(const Dictionary &p_args) {
 		String font_path = _normalize_path(p_args.get("resource_path", ""));
 		Ref<Font> font = ResourceLoader::load(font_path);
 		if (font.is_null()) {
-			return vformat(R"({"error": "Font resource not found: %s"})", font_path);
+			return vformat(R"json({"error": "Font resource not found: %s"})json", font_path);
 		}
 		control->add_theme_font_override(name, font);
 	} else if (override_type == "stylebox") {
 		String style_path = _normalize_path(p_args.get("resource_path", ""));
 		Ref<StyleBox> stylebox = ResourceLoader::load(style_path);
 		if (stylebox.is_null()) {
-			return vformat(R"({"error": "StyleBox resource not found: %s"})", style_path);
+			return vformat(R"json({"error": "StyleBox resource not found: %s"})json", style_path);
 		}
-		control->add_theme_stylebox_override(name, stylebox);
+		control->call("add_theme_stylebox_override", name, stylebox);
 	} else {
-		return vformat(R"({"error": "Unsupported override_type '%s'.'})", override_type);
+		return vformat(R"json({"error": "Unsupported override_type '%s'.'})json", override_type);
 	}
 
 	Dictionary result;
@@ -412,31 +415,31 @@ String UITools::connect_node_signal(const Dictionary &p_args) {
 	String method_name = String(p_args.get("method_name", "")).strip_edges();
 
 	if (source_path.is_empty() || target_path.is_empty()) {
-		return R"({"error": "Source or target node not found."})";
+		return R"json({"error": "Source or target node not found."})json";
 	}
 	if (signal_name.is_empty() || method_name.is_empty()) {
-		return R"({"error": "'signal_name' and 'method_name' are required."})";
+		return R"json({"error": "'signal_name' and 'method_name' are required."})json";
 	}
 
 	Node *source_node = _resolve_node_path(source_path);
 	Node *target_node = _resolve_node_path(target_path);
 	if (!source_node || !target_node) {
-		return R"({"error": "Source or target node not found."})";
+		return R"json({"error": "Source or target node not found."})json";
 	}
 
 	if (!source_node->has_signal(signal_name)) {
-		return vformat(R"({"error": "Source node does not have signal '%s'.'})", signal_name);
+		return vformat(R"json({"error": "Source node does not have signal '%s'.'})json", signal_name);
 	}
 
 	Callable callable = Callable(target_node, method_name);
 	if (source_node->is_connected(signal_name, callable)) {
-		return R"({"error": "Signal already connected."})";
+		return R"json({"error": "Signal already connected."})json";
 	}
 
 	int flags = int(p_args.get("flags", 0));
 	Error err = source_node->connect(signal_name, callable, flags);
 	if (err != OK) {
-		return vformat(R"({"error": "Failed to connect signal '%s' (code %d)."})", signal_name, (int)err);
+		return vformat(R"json({"error": "Failed to connect signal '%s' (code %d)."})json", signal_name, (int)err);
 	}
 
 	Dictionary result;
@@ -485,11 +488,23 @@ Node *UITools::_resolve_node_path(const String &p_path) const {
 	if (String(scene_root->get_path()) == identifier) {
 		return scene_root;
 	}
-	if (identifier.begins_with("/")) {
-		SceneTree *tree = scene_root->get_tree();
-		if (tree && tree->get_root()) {
-			return tree->get_root()->get_node_or_null(NodePath(identifier));
-		}
+	// Try relative path from scene root first
+	String root_name = scene_root->get_name();
+	String relative;
+	if (identifier.begins_with("/" + root_name + "/")) {
+		relative = identifier.substr(root_name.length() + 2);
+	} else if (identifier.begins_with("/")) {
+		relative = identifier.substr(1);
+	} else {
+		relative = identifier;
+	}
+	
+	Node *found = scene_root->get_node_or_null(NodePath(relative));
+	if (found) {
+		return found;
+	}
+	if (identifier == "/" + root_name || identifier == root_name) {
+		return scene_root;
 	}
 	return scene_root->get_node_or_null(NodePath(identifier));
 }
@@ -557,8 +572,8 @@ Dictionary UITools::_build_control_info(Control *p_control) const {
 	offsets["bottom"] = p_control->get_offset(SIDE_BOTTOM);
 	info["offsets"] = offsets;
 
-	info["size_flags_horizontal"] = p_control->get_size_flags_horizontal();
-	info["size_flags_vertical"] = p_control->get_size_flags_vertical();
+	info["size_flags_horizontal"] = p_control->get_h_size_flags();
+	info["size_flags_vertical"] = p_control->get_v_size_flags();
 
 	return info;
 }
@@ -649,7 +664,7 @@ void UITools::_commit_undoable_properties(Object *p_object, const Dictionary &p_
 		return;
 	}
 
-	UndoRedo *undo_redo = _plugin ? _plugin->get_undo_redo() : nullptr;
+	EditorUndoRedoManager *undo_redo = _plugin ? EditorInterface::get_singleton()->get_editor_undo_redo() : nullptr;
 
 	if (p_undoable && undo_redo) {
 		undo_redo->create_action(p_action_name);
@@ -673,7 +688,7 @@ bool UITools::_has_property(Object *p_object, const String &p_property) const {
 	if (!p_object) {
 		return false;
 	}
-	TypedArray<Dictionary> prop_list = p_object->get_property_list();
+	TypedArray<Dictionary> prop_list = p_object->call("get_property_list");
 	for (int i = 0; i < prop_list.size(); i++) {
 		Dictionary prop_info = prop_list[i];
 		if (String(prop_info.get("name", "")) == p_property) {

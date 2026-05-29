@@ -12,6 +12,8 @@
 #include "core/string/ustring.h"
 #include "core/variant/dictionary.h"
 
+class Node;
+
 class EditorPlugin;
 
 class DiagnosticTools : public RefCounted {
@@ -45,6 +47,7 @@ private:
 	int _count_nodes(Node *p_node) const;
 	void _analyze_node_recursive(Node *p_node, int p_depth, Dictionary &p_stats) const;
 	void _collect_matching_files(const String &p_path, bool p_recursive, int p_max_entries, Array &p_results, const Vector<String> &p_extensions) const;
+	String _to_absolute(const String &p_path) const;
 };
 
 #endif // DIAGNOSTIC_TOOLS_H
