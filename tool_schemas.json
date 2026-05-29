@@ -35,7 +35,8 @@
         "type": "number"
       },
       "events": {
-        "type": "string"
+        "type": "array",
+        "description": "array of input events for the action"
       },
       "save": {
         "type": "boolean"
@@ -1345,7 +1346,8 @@
     "type": "object",
     "properties": {
       "code": {
-        "type": "string"
+        "type": "string",
+        "description": "GDScript code to execute"
       }
     },
     "required": [
@@ -1772,7 +1774,8 @@
         "type": "string"
       },
       "points": {
-        "type": "string"
+        "type": "array",
+        "description": "array of collision points"
       },
       "one_way_collision": {
         "type": "boolean"
@@ -1842,7 +1845,8 @@
     "type": "object",
     "properties": {
       "events": {
-        "type": "string"
+        "type": "array",
+        "description": "array of input events"
       }
     },
     "required": []

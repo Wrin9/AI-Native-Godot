@@ -691,7 +691,6 @@ void MCPEditorPlugin::_register_tool_schemas() {
 		req.push_back("animation_name");
 		schema["required"] = req; }
 		_tool_schemas["add_animation_track"] = schema;
-		// schema assigned
 	}
 
 	{  // add_input_action
@@ -700,7 +699,7 @@ void MCPEditorPlugin::_register_tool_schemas() {
 		Dictionary props;
 		{ Dictionary p; p["type"] = "string"; p["description"] = "action"; props["action"] = p; }
 		{ Dictionary p; p["type"] = "number"; p["description"] = "deadzone"; props["deadzone"] = p; }
-		{ Dictionary p; p["type"] = "string"; p["description"] = "events"; props["events"] = p; }
+		{ Dictionary p; p["type"] = "array"; p["description"] = "array of input events for the action"; props["events"] = p; }
 		{ Dictionary p; p["type"] = "boolean"; p["description"] = "save"; props["save"] = p; }
 		schema["properties"] = props;
 		{ Array req;
@@ -1661,7 +1660,7 @@ void MCPEditorPlugin::_register_tool_schemas() {
 		Dictionary schema;
 		schema["type"] = "object";
 		Dictionary props;
-		{ Dictionary p; p["type"] = "string"; p["description"] = "code"; props["code"] = p; }
+		{ Dictionary p; p["type"] = "string"; p["description"] = "GDScript code to execute"; props["code"] = p; }
 		schema["properties"] = props;
 		{ Array req;
 		req.push_back("code");
@@ -1989,7 +1988,7 @@ void MCPEditorPlugin::_register_tool_schemas() {
 		{ Dictionary p; p["type"] = "string"; p["description"] = "atlas coords"; props["atlas_coords"] = p; }
 		{ Dictionary p; p["type"] = "integer"; p["description"] = "physics layer"; props["physics_layer"] = p; }
 		{ Dictionary p; p["type"] = "string"; p["description"] = "shape type"; props["shape_type"] = p; }
-		{ Dictionary p; p["type"] = "string"; p["description"] = "points"; props["points"] = p; }
+		{ Dictionary p; p["type"] = "array"; p["description"] = "array of collision points"; props["points"] = p; }
 		{ Dictionary p; p["type"] = "boolean"; p["description"] = "one way collision"; props["one_way_collision"] = p; }
 		schema["properties"] = props;
 		{ Array req;
@@ -2054,7 +2053,7 @@ void MCPEditorPlugin::_register_tool_schemas() {
 		Dictionary schema;
 		schema["type"] = "object";
 		Dictionary props;
-		{ Dictionary p; p["type"] = "string"; p["description"] = "events"; props["events"] = p; }
+		{ Dictionary p; p["type"] = "array"; p["description"] = "array of input events"; props["events"] = p; }
 		schema["properties"] = props;
 		schema["required"] = Array();
 		_tool_schemas["simulate_input_sequence"] = schema;

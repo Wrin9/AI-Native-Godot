@@ -15,7 +15,7 @@ void MCPEditorPlugin::_register_tool_schemas() {
 		{ Array req;
 		req.push_back("animation_name");
 		schema["required"] = req; }
-		_tool_map["add_animation_track"].input_schema = schema;
+		_tool_schemas["add_animation_track"] = schema;
 	}
 
 	{  // add_input_action
@@ -24,13 +24,13 @@ void MCPEditorPlugin::_register_tool_schemas() {
 		Dictionary props;
 		{ Dictionary p; p["type"] = "string"; p["description"] = "action"; props["action"] = p; }
 		{ Dictionary p; p["type"] = "number"; p["description"] = "deadzone"; props["deadzone"] = p; }
-		{ Dictionary p; p["type"] = "string"; p["description"] = "events"; props["events"] = p; }
+		{ Dictionary p; p["type"] = "array"; p["description"] = "array of input events for the action"; props["events"] = p; }
 		{ Dictionary p; p["type"] = "boolean"; p["description"] = "save"; props["save"] = p; }
 		schema["properties"] = props;
 		{ Array req;
 		req.push_back("action");
 		schema["required"] = req; }
-		_tool_map["add_input_action"].input_schema = schema;
+		_tool_schemas["add_input_action"] = schema;
 	}
 
 	{  // add_node_to_group
@@ -41,7 +41,7 @@ void MCPEditorPlugin::_register_tool_schemas() {
 		{ Dictionary p; p["type"] = "string"; p["description"] = "group"; props["group"] = p; }
 		schema["properties"] = props;
 		schema["required"] = Array();
-		_tool_map["add_node_to_group"].input_schema = schema;
+		_tool_schemas["add_node_to_group"] = schema;
 	}
 
 	{  // add_tile_atlas_source
@@ -61,7 +61,7 @@ void MCPEditorPlugin::_register_tool_schemas() {
 		req.push_back("tileset_path");
 		req.push_back("texture_path");
 		schema["required"] = req; }
-		_tool_map["add_tile_atlas_source"].input_schema = schema;
+		_tool_schemas["add_tile_atlas_source"] = schema;
 	}
 
 	{  // assign_material
@@ -73,7 +73,7 @@ void MCPEditorPlugin::_register_tool_schemas() {
 		{ Dictionary p; p["type"] = "integer"; p["description"] = "surface index"; props["surface_index"] = p; }
 		schema["properties"] = props;
 		schema["required"] = Array();
-		_tool_map["assign_material"].input_schema = schema;
+		_tool_schemas["assign_material"] = schema;
 	}
 
 	{  // capture_editor_view
@@ -87,7 +87,7 @@ void MCPEditorPlugin::_register_tool_schemas() {
 		{ Dictionary p; p["type"] = "boolean"; p["description"] = "return data uri"; props["return_data_uri"] = p; }
 		schema["properties"] = props;
 		schema["required"] = Array();
-		_tool_map["capture_editor_view"].input_schema = schema;
+		_tool_schemas["capture_editor_view"] = schema;
 	}
 
 	{  // clear_layer
@@ -100,7 +100,7 @@ void MCPEditorPlugin::_register_tool_schemas() {
 		{ Array req;
 		req.push_back("node_path");
 		schema["required"] = req; }
-		_tool_map["clear_layer"].input_schema = schema;
+		_tool_schemas["clear_layer"] = schema;
 	}
 
 	{  // connect_node_signal
@@ -114,7 +114,7 @@ void MCPEditorPlugin::_register_tool_schemas() {
 		{ Dictionary p; p["type"] = "integer"; p["description"] = "flags"; props["flags"] = p; }
 		schema["properties"] = props;
 		schema["required"] = Array();
-		_tool_map["connect_node_signal"].input_schema = schema;
+		_tool_schemas["connect_node_signal"] = schema;
 	}
 
 	{  // copy_file
@@ -125,7 +125,7 @@ void MCPEditorPlugin::_register_tool_schemas() {
 		{ Dictionary p; p["type"] = "string"; p["description"] = "to path"; props["to_path"] = p; }
 		schema["properties"] = props;
 		schema["required"] = Array();
-		_tool_map["copy_file"].input_schema = schema;
+		_tool_schemas["copy_file"] = schema;
 	}
 
 	{  // create_animation_clip
@@ -143,7 +143,7 @@ void MCPEditorPlugin::_register_tool_schemas() {
 		{ Array req;
 		req.push_back("animation_name");
 		schema["required"] = req; }
-		_tool_map["create_animation_clip"].input_schema = schema;
+		_tool_schemas["create_animation_clip"] = schema;
 	}
 
 	{  // create_animation_player
@@ -155,7 +155,7 @@ void MCPEditorPlugin::_register_tool_schemas() {
 		{ Dictionary p; p["type"] = "boolean"; p["description"] = "select new node"; props["select_new_node"] = p; }
 		schema["properties"] = props;
 		schema["required"] = Array();
-		_tool_map["create_animation_player"].input_schema = schema;
+		_tool_schemas["create_animation_player"] = schema;
 	}
 
 	{  // create_audio_player
@@ -168,7 +168,7 @@ void MCPEditorPlugin::_register_tool_schemas() {
 		{ Dictionary p; p["type"] = "boolean"; p["description"] = "autoplay"; props["autoplay"] = p; }
 		schema["properties"] = props;
 		schema["required"] = Array();
-		_tool_map["create_audio_player"].input_schema = schema;
+		_tool_schemas["create_audio_player"] = schema;
 	}
 
 	{  // create_camera_3d
@@ -182,7 +182,7 @@ void MCPEditorPlugin::_register_tool_schemas() {
 		{ Dictionary p; p["type"] = "number"; p["description"] = "far"; props["far"] = p; }
 		schema["properties"] = props;
 		schema["required"] = Array();
-		_tool_map["create_camera_3d"].input_schema = schema;
+		_tool_schemas["create_camera_3d"] = schema;
 	}
 
 	{  // create_collision_shape
@@ -200,7 +200,7 @@ void MCPEditorPlugin::_register_tool_schemas() {
 		{ Dictionary p; p["type"] = "boolean"; p["description"] = "disabled"; props["disabled"] = p; }
 		schema["properties"] = props;
 		schema["required"] = Array();
-		_tool_map["create_collision_shape"].input_schema = schema;
+		_tool_schemas["create_collision_shape"] = schema;
 	}
 
 	{  // create_container
@@ -212,7 +212,7 @@ void MCPEditorPlugin::_register_tool_schemas() {
 		{ Array req;
 		req.push_back("container_type");
 		schema["required"] = req; }
-		_tool_map["create_container"].input_schema = schema;
+		_tool_schemas["create_container"] = schema;
 	}
 
 	{  // create_control
@@ -227,7 +227,7 @@ void MCPEditorPlugin::_register_tool_schemas() {
 		{ Array req;
 		req.push_back("control_type");
 		schema["required"] = req; }
-		_tool_map["create_control"].input_schema = schema;
+		_tool_schemas["create_control"] = schema;
 	}
 
 	{  // create_light
@@ -241,7 +241,7 @@ void MCPEditorPlugin::_register_tool_schemas() {
 		{ Dictionary p; p["type"] = "number"; p["description"] = "energy"; props["energy"] = p; }
 		schema["properties"] = props;
 		schema["required"] = Array();
-		_tool_map["create_light"].input_schema = schema;
+		_tool_schemas["create_light"] = schema;
 	}
 
 	{  // create_material
@@ -255,7 +255,7 @@ void MCPEditorPlugin::_register_tool_schemas() {
 		{ Array req;
 		req.push_back("path");
 		schema["required"] = req; }
-		_tool_map["create_material"].input_schema = schema;
+		_tool_schemas["create_material"] = schema;
 	}
 
 	{  // create_mesh_instance
@@ -267,7 +267,7 @@ void MCPEditorPlugin::_register_tool_schemas() {
 		{ Dictionary p; p["type"] = "string"; p["description"] = "mesh path"; props["mesh_path"] = p; }
 		schema["properties"] = props;
 		schema["required"] = Array();
-		_tool_map["create_mesh_instance"].input_schema = schema;
+		_tool_schemas["create_mesh_instance"] = schema;
 	}
 
 	{  // create_navigation_region
@@ -280,7 +280,7 @@ void MCPEditorPlugin::_register_tool_schemas() {
 		{ Dictionary p; p["type"] = "string"; p["description"] = "polygons"; props["polygons"] = p; }
 		schema["properties"] = props;
 		schema["required"] = Array();
-		_tool_map["create_navigation_region"].input_schema = schema;
+		_tool_schemas["create_navigation_region"] = schema;
 	}
 
 	{  // create_new_scene
@@ -296,7 +296,7 @@ void MCPEditorPlugin::_register_tool_schemas() {
 		{ Array req;
 		req.push_back("path");
 		schema["required"] = req; }
-		_tool_map["create_new_scene"].input_schema = schema;
+		_tool_schemas["create_new_scene"] = schema;
 	}
 
 	{  // create_node
@@ -311,7 +311,7 @@ void MCPEditorPlugin::_register_tool_schemas() {
 		{ Array req;
 		req.push_back("node_type");
 		schema["required"] = req; }
-		_tool_map["create_node"].input_schema = schema;
+		_tool_schemas["create_node"] = schema;
 	}
 
 	{  // create_packed_scene_from_node
@@ -325,7 +325,7 @@ void MCPEditorPlugin::_register_tool_schemas() {
 		{ Array req;
 		req.push_back("path");
 		schema["required"] = req; }
-		_tool_map["create_packed_scene_from_node"].input_schema = schema;
+		_tool_schemas["create_packed_scene_from_node"] = schema;
 	}
 
 	{  // create_particles
@@ -338,7 +338,7 @@ void MCPEditorPlugin::_register_tool_schemas() {
 		{ Dictionary p; p["type"] = "integer"; p["description"] = "amount"; props["amount"] = p; }
 		schema["properties"] = props;
 		schema["required"] = Array();
-		_tool_map["create_particles"].input_schema = schema;
+		_tool_schemas["create_particles"] = schema;
 	}
 
 	{  // create_ray_cast
@@ -350,7 +350,7 @@ void MCPEditorPlugin::_register_tool_schemas() {
 		{ Dictionary p; p["type"] = "string"; p["description"] = "target position"; props["target_position"] = p; }
 		schema["properties"] = props;
 		schema["required"] = Array();
-		_tool_map["create_ray_cast"].input_schema = schema;
+		_tool_schemas["create_ray_cast"] = schema;
 	}
 
 	{  // create_script
@@ -371,7 +371,7 @@ void MCPEditorPlugin::_register_tool_schemas() {
 		{ Array req;
 		req.push_back("path");
 		schema["required"] = req; }
-		_tool_map["create_script"].input_schema = schema;
+		_tool_schemas["create_script"] = schema;
 	}
 
 	{  // create_shader
@@ -385,7 +385,7 @@ void MCPEditorPlugin::_register_tool_schemas() {
 		{ Array req;
 		req.push_back("path");
 		schema["required"] = req; }
-		_tool_map["create_shader"].input_schema = schema;
+		_tool_schemas["create_shader"] = schema;
 	}
 
 	{  // create_tile_map
@@ -398,7 +398,7 @@ void MCPEditorPlugin::_register_tool_schemas() {
 		{ Dictionary p; p["type"] = "integer"; p["description"] = "layers"; props["layers"] = p; }
 		schema["properties"] = props;
 		schema["required"] = Array();
-		_tool_map["create_tile_map"].input_schema = schema;
+		_tool_schemas["create_tile_map"] = schema;
 	}
 
 	{  // create_tile_set
@@ -412,7 +412,7 @@ void MCPEditorPlugin::_register_tool_schemas() {
 		{ Array req;
 		req.push_back("path");
 		schema["required"] = req; }
-		_tool_map["create_tile_set"].input_schema = schema;
+		_tool_schemas["create_tile_set"] = schema;
 	}
 
 	{  // create_ui_root
@@ -427,7 +427,7 @@ void MCPEditorPlugin::_register_tool_schemas() {
 		{ Dictionary p; p["type"] = "boolean"; p["description"] = "select new node"; props["select_new_node"] = p; }
 		schema["properties"] = props;
 		schema["required"] = Array();
-		_tool_map["create_ui_root"].input_schema = schema;
+		_tool_schemas["create_ui_root"] = schema;
 	}
 
 	{  // create_viewport
@@ -440,7 +440,7 @@ void MCPEditorPlugin::_register_tool_schemas() {
 		{ Dictionary p; p["type"] = "integer"; p["description"] = "size h"; props["size_h"] = p; }
 		schema["properties"] = props;
 		schema["required"] = Array();
-		_tool_map["create_viewport"].input_schema = schema;
+		_tool_schemas["create_viewport"] = schema;
 	}
 
 	{  // delete_file
@@ -452,7 +452,7 @@ void MCPEditorPlugin::_register_tool_schemas() {
 		{ Array req;
 		req.push_back("path");
 		schema["required"] = req; }
-		_tool_map["delete_file"].input_schema = schema;
+		_tool_schemas["delete_file"] = schema;
 	}
 
 	{  // disconnect_node_signal
@@ -465,7 +465,7 @@ void MCPEditorPlugin::_register_tool_schemas() {
 		{ Dictionary p; p["type"] = "string"; p["description"] = "method name"; props["method_name"] = p; }
 		schema["properties"] = props;
 		schema["required"] = Array();
-		_tool_map["disconnect_node_signal"].input_schema = schema;
+		_tool_schemas["disconnect_node_signal"] = schema;
 	}
 
 	{  // duplicate_node
@@ -479,7 +479,7 @@ void MCPEditorPlugin::_register_tool_schemas() {
 		{ Array req;
 		req.push_back("node_path");
 		schema["required"] = req; }
-		_tool_map["duplicate_node"].input_schema = schema;
+		_tool_schemas["duplicate_node"] = schema;
 	}
 
 	{  // edit_script
@@ -492,7 +492,7 @@ void MCPEditorPlugin::_register_tool_schemas() {
 		{ Array req;
 		req.push_back("path");
 		schema["required"] = req; }
-		_tool_map["edit_script"].input_schema = schema;
+		_tool_schemas["edit_script"] = schema;
 	}
 
 	{  // enter_play_mode
@@ -505,7 +505,7 @@ void MCPEditorPlugin::_register_tool_schemas() {
 		{ Array req;
 		req.push_back("scene_path");
 		schema["required"] = req; }
-		_tool_map["enter_play_mode"].input_schema = schema;
+		_tool_schemas["enter_play_mode"] = schema;
 	}
 
 	{  // export_project
@@ -517,7 +517,7 @@ void MCPEditorPlugin::_register_tool_schemas() {
 		{ Dictionary p; p["type"] = "boolean"; p["description"] = "debug"; props["debug"] = p; }
 		schema["properties"] = props;
 		schema["required"] = Array();
-		_tool_map["export_project"].input_schema = schema;
+		_tool_schemas["export_project"] = schema;
 	}
 
 	{  // file_exists
@@ -529,7 +529,7 @@ void MCPEditorPlugin::_register_tool_schemas() {
 		{ Array req;
 		req.push_back("path");
 		schema["required"] = req; }
-		_tool_map["file_exists"].input_schema = schema;
+		_tool_schemas["file_exists"] = schema;
 	}
 
 	{  // find_nodes
@@ -542,7 +542,7 @@ void MCPEditorPlugin::_register_tool_schemas() {
 		{ Dictionary p; p["type"] = "integer"; p["description"] = "max results"; props["max_results"] = p; }
 		schema["properties"] = props;
 		schema["required"] = Array();
-		_tool_map["find_nodes"].input_schema = schema;
+		_tool_schemas["find_nodes"] = schema;
 	}
 
 	{  // find_usages
@@ -557,7 +557,7 @@ void MCPEditorPlugin::_register_tool_schemas() {
 		{ Array req;
 		req.push_back("symbol");
 		schema["required"] = req; }
-		_tool_map["find_usages"].input_schema = schema;
+		_tool_schemas["find_usages"] = schema;
 	}
 
 	{  // get_console_logs
@@ -570,7 +570,7 @@ void MCPEditorPlugin::_register_tool_schemas() {
 		{ Dictionary p; p["type"] = "string"; p["description"] = "severity"; props["severity"] = p; }
 		schema["properties"] = props;
 		schema["required"] = Array();
-		_tool_map["get_console_logs"].input_schema = schema;
+		_tool_schemas["get_console_logs"] = schema;
 	}
 
 	{  // get_input_action
@@ -582,7 +582,7 @@ void MCPEditorPlugin::_register_tool_schemas() {
 		{ Array req;
 		req.push_back("action");
 		schema["required"] = req; }
-		_tool_map["get_input_action"].input_schema = schema;
+		_tool_schemas["get_input_action"] = schema;
 	}
 
 	{  // get_node_connections
@@ -594,7 +594,7 @@ void MCPEditorPlugin::_register_tool_schemas() {
 		{ Array req;
 		req.push_back("node_path");
 		schema["required"] = req; }
-		_tool_map["get_node_connections"].input_schema = schema;
+		_tool_schemas["get_node_connections"] = schema;
 	}
 
 	{  // get_node_info
@@ -606,7 +606,7 @@ void MCPEditorPlugin::_register_tool_schemas() {
 		{ Array req;
 		req.push_back("node_path");
 		schema["required"] = req; }
-		_tool_map["get_node_info"].input_schema = schema;
+		_tool_schemas["get_node_info"] = schema;
 	}
 
 	{  // get_packed_scene_info
@@ -619,7 +619,7 @@ void MCPEditorPlugin::_register_tool_schemas() {
 		{ Array req;
 		req.push_back("path");
 		schema["required"] = req; }
-		_tool_map["get_packed_scene_info"].input_schema = schema;
+		_tool_schemas["get_packed_scene_info"] = schema;
 	}
 
 	{  // get_project_setting
@@ -631,7 +631,7 @@ void MCPEditorPlugin::_register_tool_schemas() {
 		{ Array req;
 		req.push_back("key");
 		schema["required"] = req; }
-		_tool_map["get_project_setting"].input_schema = schema;
+		_tool_schemas["get_project_setting"] = schema;
 	}
 
 	{  // get_resource_info
@@ -641,7 +641,7 @@ void MCPEditorPlugin::_register_tool_schemas() {
 		{ Dictionary p; p["type"] = "string"; p["description"] = "path"; props["path"] = p; }
 		schema["properties"] = props;
 		schema["required"] = Array();
-		_tool_map["get_resource_info"].input_schema = schema;
+		_tool_schemas["get_resource_info"] = schema;
 	}
 
 	{  // get_script_errors
@@ -652,7 +652,7 @@ void MCPEditorPlugin::_register_tool_schemas() {
 		{ Dictionary p; p["type"] = "integer"; p["description"] = "max files"; props["max_files"] = p; }
 		schema["properties"] = props;
 		schema["required"] = Array();
-		_tool_map["get_script_errors"].input_schema = schema;
+		_tool_schemas["get_script_errors"] = schema;
 	}
 
 	{  // get_tile_map_data
@@ -665,7 +665,7 @@ void MCPEditorPlugin::_register_tool_schemas() {
 		{ Array req;
 		req.push_back("node_path");
 		schema["required"] = req; }
-		_tool_map["get_tile_map_data"].input_schema = schema;
+		_tool_schemas["get_tile_map_data"] = schema;
 	}
 
 	{  // import_resource
@@ -676,7 +676,7 @@ void MCPEditorPlugin::_register_tool_schemas() {
 		{ Dictionary p; p["type"] = "string"; p["description"] = "dest path"; props["dest_path"] = p; }
 		schema["properties"] = props;
 		schema["required"] = Array();
-		_tool_map["import_resource"].input_schema = schema;
+		_tool_schemas["import_resource"] = schema;
 	}
 
 	{  // instantiate_scene
@@ -691,7 +691,7 @@ void MCPEditorPlugin::_register_tool_schemas() {
 		{ Array req;
 		req.push_back("scene_path");
 		schema["required"] = req; }
-		_tool_map["instantiate_scene"].input_schema = schema;
+		_tool_schemas["instantiate_scene"] = schema;
 	}
 
 	{  // list_animations
@@ -701,7 +701,7 @@ void MCPEditorPlugin::_register_tool_schemas() {
 		{ Dictionary p; p["type"] = "string"; p["description"] = "animation player path"; props["animation_player_path"] = p; }
 		schema["properties"] = props;
 		schema["required"] = Array();
-		_tool_map["list_animations"].input_schema = schema;
+		_tool_schemas["list_animations"] = schema;
 	}
 
 	{  // list_files
@@ -714,7 +714,7 @@ void MCPEditorPlugin::_register_tool_schemas() {
 		{ Dictionary p; p["type"] = "integer"; p["description"] = "max entries"; props["max_entries"] = p; }
 		schema["properties"] = props;
 		schema["required"] = Array();
-		_tool_map["list_files"].input_schema = schema;
+		_tool_schemas["list_files"] = schema;
 	}
 
 	{  // list_node_methods
@@ -727,7 +727,7 @@ void MCPEditorPlugin::_register_tool_schemas() {
 		{ Array req;
 		req.push_back("node_path");
 		schema["required"] = req; }
-		_tool_map["list_node_methods"].input_schema = schema;
+		_tool_schemas["list_node_methods"] = schema;
 	}
 
 	{  // list_node_properties
@@ -740,7 +740,7 @@ void MCPEditorPlugin::_register_tool_schemas() {
 		{ Array req;
 		req.push_back("node_path");
 		schema["required"] = req; }
-		_tool_map["list_node_properties"].input_schema = schema;
+		_tool_schemas["list_node_properties"] = schema;
 	}
 
 	{  // list_node_signals
@@ -752,7 +752,7 @@ void MCPEditorPlugin::_register_tool_schemas() {
 		{ Array req;
 		req.push_back("node_path");
 		schema["required"] = req; }
-		_tool_map["list_node_signals"].input_schema = schema;
+		_tool_schemas["list_node_signals"] = schema;
 	}
 
 	{  // list_project_settings
@@ -764,7 +764,7 @@ void MCPEditorPlugin::_register_tool_schemas() {
 		{ Dictionary p; p["type"] = "integer"; p["description"] = "max results"; props["max_results"] = p; }
 		schema["properties"] = props;
 		schema["required"] = Array();
-		_tool_map["list_project_settings"].input_schema = schema;
+		_tool_schemas["list_project_settings"] = schema;
 	}
 
 	{  // list_resources
@@ -775,7 +775,7 @@ void MCPEditorPlugin::_register_tool_schemas() {
 		{ Dictionary p; p["type"] = "string"; p["description"] = "type filter"; props["type_filter"] = p; }
 		schema["properties"] = props;
 		schema["required"] = Array();
-		_tool_map["list_resources"].input_schema = schema;
+		_tool_schemas["list_resources"] = schema;
 	}
 
 	{  // list_scenes
@@ -787,7 +787,7 @@ void MCPEditorPlugin::_register_tool_schemas() {
 		{ Dictionary p; p["type"] = "boolean"; p["description"] = "recursive"; props["recursive"] = p; }
 		schema["properties"] = props;
 		schema["required"] = Array();
-		_tool_map["list_scenes"].input_schema = schema;
+		_tool_schemas["list_scenes"] = schema;
 	}
 
 	{  // list_scripts
@@ -800,7 +800,7 @@ void MCPEditorPlugin::_register_tool_schemas() {
 		{ Dictionary p; p["type"] = "string"; p["description"] = "language"; props["language"] = p; }
 		schema["properties"] = props;
 		schema["required"] = Array();
-		_tool_map["list_scripts"].input_schema = schema;
+		_tool_schemas["list_scripts"] = schema;
 	}
 
 	{  // map_project
@@ -812,7 +812,7 @@ void MCPEditorPlugin::_register_tool_schemas() {
 		{ Dictionary p; p["type"] = "integer"; p["description"] = "max files"; props["max_files"] = p; }
 		schema["properties"] = props;
 		schema["required"] = Array();
-		_tool_map["map_project"].input_schema = schema;
+		_tool_schemas["map_project"] = schema;
 	}
 
 	{  // move_file
@@ -823,7 +823,7 @@ void MCPEditorPlugin::_register_tool_schemas() {
 		{ Dictionary p; p["type"] = "string"; p["description"] = "to path"; props["to_path"] = p; }
 		schema["properties"] = props;
 		schema["required"] = Array();
-		_tool_map["move_file"].input_schema = schema;
+		_tool_schemas["move_file"] = schema;
 	}
 
 	{  // open_scene
@@ -836,7 +836,7 @@ void MCPEditorPlugin::_register_tool_schemas() {
 		{ Array req;
 		req.push_back("path");
 		schema["required"] = req; }
-		_tool_map["open_scene"].input_schema = schema;
+		_tool_schemas["open_scene"] = schema;
 	}
 
 	{  // open_script
@@ -850,7 +850,7 @@ void MCPEditorPlugin::_register_tool_schemas() {
 		{ Array req;
 		req.push_back("path");
 		schema["required"] = req; }
-		_tool_map["open_script"].input_schema = schema;
+		_tool_schemas["open_script"] = schema;
 	}
 
 	{  // patch_script
@@ -866,7 +866,7 @@ void MCPEditorPlugin::_register_tool_schemas() {
 		{ Array req;
 		req.push_back("path");
 		schema["required"] = req; }
-		_tool_map["patch_script"].input_schema = schema;
+		_tool_schemas["patch_script"] = schema;
 	}
 
 	{  // play_animation
@@ -882,7 +882,7 @@ void MCPEditorPlugin::_register_tool_schemas() {
 		{ Array req;
 		req.push_back("animation_name");
 		schema["required"] = req; }
-		_tool_map["play_animation"].input_schema = schema;
+		_tool_schemas["play_animation"] = schema;
 	}
 
 	{  // read_file
@@ -895,7 +895,7 @@ void MCPEditorPlugin::_register_tool_schemas() {
 		{ Array req;
 		req.push_back("path");
 		schema["required"] = req; }
-		_tool_map["read_file"].input_schema = schema;
+		_tool_schemas["read_file"] = schema;
 	}
 
 	{  // remove_autoload
@@ -908,7 +908,7 @@ void MCPEditorPlugin::_register_tool_schemas() {
 		{ Array req;
 		req.push_back("name");
 		schema["required"] = req; }
-		_tool_map["remove_autoload"].input_schema = schema;
+		_tool_schemas["remove_autoload"] = schema;
 	}
 
 	{  // remove_input_action
@@ -921,7 +921,7 @@ void MCPEditorPlugin::_register_tool_schemas() {
 		{ Array req;
 		req.push_back("action");
 		schema["required"] = req; }
-		_tool_map["remove_input_action"].input_schema = schema;
+		_tool_schemas["remove_input_action"] = schema;
 	}
 
 	{  // remove_node
@@ -933,7 +933,7 @@ void MCPEditorPlugin::_register_tool_schemas() {
 		{ Array req;
 		req.push_back("node_path");
 		schema["required"] = req; }
-		_tool_map["remove_node"].input_schema = schema;
+		_tool_schemas["remove_node"] = schema;
 	}
 
 	{  // remove_node_from_group
@@ -944,7 +944,7 @@ void MCPEditorPlugin::_register_tool_schemas() {
 		{ Dictionary p; p["type"] = "string"; p["description"] = "group"; props["group"] = p; }
 		schema["properties"] = props;
 		schema["required"] = Array();
-		_tool_map["remove_node_from_group"].input_schema = schema;
+		_tool_schemas["remove_node_from_group"] = schema;
 	}
 
 	{  // rename_node
@@ -956,7 +956,7 @@ void MCPEditorPlugin::_register_tool_schemas() {
 		{ Dictionary p; p["type"] = "boolean"; p["description"] = "undoable"; props["undoable"] = p; }
 		schema["properties"] = props;
 		schema["required"] = Array();
-		_tool_map["rename_node"].input_schema = schema;
+		_tool_schemas["rename_node"] = schema;
 	}
 
 	{  // reparent_node
@@ -968,7 +968,7 @@ void MCPEditorPlugin::_register_tool_schemas() {
 		{ Dictionary p; p["type"] = "boolean"; p["description"] = "keep global transform"; props["keep_global_transform"] = p; }
 		schema["properties"] = props;
 		schema["required"] = Array();
-		_tool_map["reparent_node"].input_schema = schema;
+		_tool_schemas["reparent_node"] = schema;
 	}
 
 	{  // request_script_reload
@@ -978,19 +978,19 @@ void MCPEditorPlugin::_register_tool_schemas() {
 		{ Dictionary p; p["type"] = "string"; p["description"] = "path"; props["path"] = p; }
 		schema["properties"] = props;
 		schema["required"] = Array();
-		_tool_map["request_script_reload"].input_schema = schema;
+		_tool_schemas["request_script_reload"] = schema;
 	}
 
 	{  // run_code
 		Dictionary schema;
 		schema["type"] = "object";
 		Dictionary props;
-		{ Dictionary p; p["type"] = "string"; p["description"] = "code"; props["code"] = p; }
+		{ Dictionary p; p["type"] = "string"; p["description"] = "GDScript code to execute"; props["code"] = p; }
 		schema["properties"] = props;
 		{ Array req;
 		req.push_back("code");
 		schema["required"] = req; }
-		_tool_map["run_code"].input_schema = schema;
+		_tool_schemas["run_code"] = schema;
 	}
 
 	{  // save_scene_as
@@ -1003,7 +1003,7 @@ void MCPEditorPlugin::_register_tool_schemas() {
 		{ Array req;
 		req.push_back("path");
 		schema["required"] = req; }
-		_tool_map["save_scene_as"].input_schema = schema;
+		_tool_schemas["save_scene_as"] = schema;
 	}
 
 	{  // search_files
@@ -1019,7 +1019,7 @@ void MCPEditorPlugin::_register_tool_schemas() {
 		{ Array req;
 		req.push_back("pattern");
 		schema["required"] = req; }
-		_tool_map["search_files"].input_schema = schema;
+		_tool_schemas["search_files"] = schema;
 	}
 
 	{  // select_node
@@ -1031,7 +1031,7 @@ void MCPEditorPlugin::_register_tool_schemas() {
 		{ Array req;
 		req.push_back("node_path");
 		schema["required"] = req; }
-		_tool_map["select_node"].input_schema = schema;
+		_tool_schemas["select_node"] = schema;
 	}
 
 	{  // set_addon_enabled
@@ -1045,7 +1045,7 @@ void MCPEditorPlugin::_register_tool_schemas() {
 		req.push_back("addon");
 		req.push_back("enabled");
 		schema["required"] = req; }
-		_tool_map["set_addon_enabled"].input_schema = schema;
+		_tool_schemas["set_addon_enabled"] = schema;
 	}
 
 	{  // set_autoload
@@ -1058,7 +1058,7 @@ void MCPEditorPlugin::_register_tool_schemas() {
 		{ Dictionary p; p["type"] = "boolean"; p["description"] = "save"; props["save"] = p; }
 		schema["properties"] = props;
 		schema["required"] = Array();
-		_tool_map["set_autoload"].input_schema = schema;
+		_tool_schemas["set_autoload"] = schema;
 	}
 
 	{  // set_cell
@@ -1075,7 +1075,7 @@ void MCPEditorPlugin::_register_tool_schemas() {
 		{ Array req;
 		req.push_back("node_path");
 		schema["required"] = req; }
-		_tool_map["set_cell"].input_schema = schema;
+		_tool_schemas["set_cell"] = schema;
 	}
 
 	{  // set_cells_terrain_connect
@@ -1092,7 +1092,7 @@ void MCPEditorPlugin::_register_tool_schemas() {
 		{ Array req;
 		req.push_back("node_path");
 		schema["required"] = req; }
-		_tool_map["set_cells_terrain_connect"].input_schema = schema;
+		_tool_schemas["set_cells_terrain_connect"] = schema;
 	}
 
 	{  // set_collision_shape_data
@@ -1108,7 +1108,7 @@ void MCPEditorPlugin::_register_tool_schemas() {
 		{ Array req;
 		req.push_back("node_path");
 		schema["required"] = req; }
-		_tool_map["set_collision_shape_data"].input_schema = schema;
+		_tool_schemas["set_collision_shape_data"] = schema;
 	}
 
 	{  // set_control_layout
@@ -1119,7 +1119,7 @@ void MCPEditorPlugin::_register_tool_schemas() {
 		{ Dictionary p; p["type"] = "boolean"; p["description"] = "undoable"; props["undoable"] = p; }
 		schema["properties"] = props;
 		schema["required"] = Array();
-		_tool_map["set_control_layout"].input_schema = schema;
+		_tool_schemas["set_control_layout"] = schema;
 	}
 
 	{  // set_control_size_flags
@@ -1130,7 +1130,7 @@ void MCPEditorPlugin::_register_tool_schemas() {
 		{ Dictionary p; p["type"] = "boolean"; p["description"] = "undoable"; props["undoable"] = p; }
 		schema["properties"] = props;
 		schema["required"] = Array();
-		_tool_map["set_control_size_flags"].input_schema = schema;
+		_tool_schemas["set_control_size_flags"] = schema;
 	}
 
 	{  // set_control_text
@@ -1143,7 +1143,7 @@ void MCPEditorPlugin::_register_tool_schemas() {
 		{ Dictionary p; p["type"] = "boolean"; p["description"] = "undoable"; props["undoable"] = p; }
 		schema["properties"] = props;
 		schema["required"] = Array();
-		_tool_map["set_control_text"].input_schema = schema;
+		_tool_schemas["set_control_text"] = schema;
 	}
 
 	{  // set_control_theme_override
@@ -1157,7 +1157,7 @@ void MCPEditorPlugin::_register_tool_schemas() {
 		{ Dictionary p; p["type"] = "string"; p["description"] = "resource path"; props["resource_path"] = p; }
 		schema["properties"] = props;
 		schema["required"] = Array();
-		_tool_map["set_control_theme_override"].input_schema = schema;
+		_tool_schemas["set_control_theme_override"] = schema;
 	}
 
 	{  // set_editor_setting
@@ -1168,7 +1168,7 @@ void MCPEditorPlugin::_register_tool_schemas() {
 		{ Dictionary p; p["type"] = "string"; p["description"] = "value"; props["value"] = p; }
 		schema["properties"] = props;
 		schema["required"] = Array();
-		_tool_map["set_editor_setting"].input_schema = schema;
+		_tool_schemas["set_editor_setting"] = schema;
 	}
 
 	{  // set_environment
@@ -1181,7 +1181,7 @@ void MCPEditorPlugin::_register_tool_schemas() {
 		{ Dictionary p; p["type"] = "number"; p["description"] = "ambient color"; props["ambient_color"] = p; }
 		schema["properties"] = props;
 		schema["required"] = Array();
-		_tool_map["set_environment"].input_schema = schema;
+		_tool_schemas["set_environment"] = schema;
 	}
 
 	{  // set_export_preset
@@ -1194,7 +1194,7 @@ void MCPEditorPlugin::_register_tool_schemas() {
 		{ Dictionary p; p["type"] = "string"; p["description"] = "settings"; props["settings"] = p; }
 		schema["properties"] = props;
 		schema["required"] = Array();
-		_tool_map["set_export_preset"].input_schema = schema;
+		_tool_schemas["set_export_preset"] = schema;
 	}
 
 	{  // set_node_properties
@@ -1208,7 +1208,7 @@ void MCPEditorPlugin::_register_tool_schemas() {
 		{ Array req;
 		req.push_back("node_path");
 		schema["required"] = req; }
-		_tool_map["set_node_properties"].input_schema = schema;
+		_tool_schemas["set_node_properties"] = schema;
 	}
 
 	{  // set_node_property
@@ -1221,7 +1221,7 @@ void MCPEditorPlugin::_register_tool_schemas() {
 		{ Dictionary p; p["type"] = "boolean"; p["description"] = "undoable"; props["undoable"] = p; }
 		schema["properties"] = props;
 		schema["required"] = Array();
-		_tool_map["set_node_property"].input_schema = schema;
+		_tool_schemas["set_node_property"] = schema;
 	}
 
 	{  // set_node_script
@@ -1232,7 +1232,7 @@ void MCPEditorPlugin::_register_tool_schemas() {
 		{ Dictionary p; p["type"] = "string"; p["description"] = "script path"; props["script_path"] = p; }
 		schema["properties"] = props;
 		schema["required"] = Array();
-		_tool_map["set_node_script"].input_schema = schema;
+		_tool_schemas["set_node_script"] = schema;
 	}
 
 	{  // set_physics_material
@@ -1244,7 +1244,7 @@ void MCPEditorPlugin::_register_tool_schemas() {
 		{ Array req;
 		req.push_back("node_path");
 		schema["required"] = req; }
-		_tool_map["set_physics_material"].input_schema = schema;
+		_tool_schemas["set_physics_material"] = schema;
 	}
 
 	{  // set_project_setting
@@ -1259,7 +1259,7 @@ void MCPEditorPlugin::_register_tool_schemas() {
 		req.push_back("key");
 		req.push_back("value");
 		schema["required"] = req; }
-		_tool_map["set_project_setting"].input_schema = schema;
+		_tool_schemas["set_project_setting"] = schema;
 	}
 
 	{  // set_resource_property
@@ -1271,7 +1271,7 @@ void MCPEditorPlugin::_register_tool_schemas() {
 		{ Dictionary p; p["type"] = "string"; p["description"] = "value"; props["value"] = p; }
 		schema["properties"] = props;
 		schema["required"] = Array();
-		_tool_map["set_resource_property"].input_schema = schema;
+		_tool_schemas["set_resource_property"] = schema;
 	}
 
 	{  // set_shader_code
@@ -1285,7 +1285,7 @@ void MCPEditorPlugin::_register_tool_schemas() {
 		req.push_back("path");
 		req.push_back("code");
 		schema["required"] = req; }
-		_tool_map["set_shader_code"].input_schema = schema;
+		_tool_schemas["set_shader_code"] = schema;
 	}
 
 	{  // set_shader_param
@@ -1301,7 +1301,7 @@ void MCPEditorPlugin::_register_tool_schemas() {
 		{ Array req;
 		req.push_back("node_path");
 		schema["required"] = req; }
-		_tool_map["set_shader_param"].input_schema = schema;
+		_tool_schemas["set_shader_param"] = schema;
 	}
 
 	{  // set_tile_set_collision
@@ -1313,13 +1313,13 @@ void MCPEditorPlugin::_register_tool_schemas() {
 		{ Dictionary p; p["type"] = "string"; p["description"] = "atlas coords"; props["atlas_coords"] = p; }
 		{ Dictionary p; p["type"] = "integer"; p["description"] = "physics layer"; props["physics_layer"] = p; }
 		{ Dictionary p; p["type"] = "string"; p["description"] = "shape type"; props["shape_type"] = p; }
-		{ Dictionary p; p["type"] = "string"; p["description"] = "points"; props["points"] = p; }
+		{ Dictionary p; p["type"] = "array"; p["description"] = "array of collision points"; props["points"] = p; }
 		{ Dictionary p; p["type"] = "boolean"; p["description"] = "one way collision"; props["one_way_collision"] = p; }
 		schema["properties"] = props;
 		{ Array req;
 		req.push_back("tileset_path");
 		schema["required"] = req; }
-		_tool_map["set_tile_set_collision"].input_schema = schema;
+		_tool_schemas["set_tile_set_collision"] = schema;
 	}
 
 	{  // set_time_scale
@@ -1331,7 +1331,7 @@ void MCPEditorPlugin::_register_tool_schemas() {
 		{ Array req;
 		req.push_back("value");
 		schema["required"] = req; }
-		_tool_map["set_time_scale"].input_schema = schema;
+		_tool_schemas["set_time_scale"] = schema;
 	}
 
 	{  // set_transform_2d
@@ -1344,7 +1344,7 @@ void MCPEditorPlugin::_register_tool_schemas() {
 		{ Array req;
 		req.push_back("node_path");
 		schema["required"] = req; }
-		_tool_map["set_transform_2d"].input_schema = schema;
+		_tool_schemas["set_transform_2d"] = schema;
 	}
 
 	{  // set_transform_3d
@@ -1357,7 +1357,7 @@ void MCPEditorPlugin::_register_tool_schemas() {
 		{ Array req;
 		req.push_back("node_path");
 		schema["required"] = req; }
-		_tool_map["set_transform_3d"].input_schema = schema;
+		_tool_schemas["set_transform_3d"] = schema;
 	}
 
 	{  // simulate_action
@@ -1371,17 +1371,17 @@ void MCPEditorPlugin::_register_tool_schemas() {
 		{ Array req;
 		req.push_back("action");
 		schema["required"] = req; }
-		_tool_map["simulate_action"].input_schema = schema;
+		_tool_schemas["simulate_action"] = schema;
 	}
 
 	{  // simulate_input_sequence
 		Dictionary schema;
 		schema["type"] = "object";
 		Dictionary props;
-		{ Dictionary p; p["type"] = "string"; p["description"] = "events"; props["events"] = p; }
+		{ Dictionary p; p["type"] = "array"; p["description"] = "array of input events"; props["events"] = p; }
 		schema["properties"] = props;
 		schema["required"] = Array();
-		_tool_map["simulate_input_sequence"].input_schema = schema;
+		_tool_schemas["simulate_input_sequence"] = schema;
 	}
 
 	{  // simulate_key_event
@@ -1395,7 +1395,7 @@ void MCPEditorPlugin::_register_tool_schemas() {
 		{ Array req;
 		req.push_back("physical_key");
 		schema["required"] = req; }
-		_tool_map["simulate_key_event"].input_schema = schema;
+		_tool_schemas["simulate_key_event"] = schema;
 	}
 
 	{  // simulate_mouse_button
@@ -1407,7 +1407,7 @@ void MCPEditorPlugin::_register_tool_schemas() {
 		{ Dictionary p; p["type"] = "string"; p["description"] = "position"; props["position"] = p; }
 		schema["properties"] = props;
 		schema["required"] = Array();
-		_tool_map["simulate_mouse_button"].input_schema = schema;
+		_tool_schemas["simulate_mouse_button"] = schema;
 	}
 
 	{  // simulate_mouse_drag
@@ -1420,7 +1420,7 @@ void MCPEditorPlugin::_register_tool_schemas() {
 		{ Dictionary p; p["type"] = "string"; p["description"] = "button"; props["button"] = p; }
 		schema["properties"] = props;
 		schema["required"] = Array();
-		_tool_map["simulate_mouse_drag"].input_schema = schema;
+		_tool_schemas["simulate_mouse_drag"] = schema;
 	}
 
 	{  // validate_script
@@ -1432,7 +1432,7 @@ void MCPEditorPlugin::_register_tool_schemas() {
 		{ Array req;
 		req.push_back("path");
 		schema["required"] = req; }
-		_tool_map["validate_script"].input_schema = schema;
+		_tool_schemas["validate_script"] = schema;
 	}
 
 	{  // write_file
@@ -1445,7 +1445,7 @@ void MCPEditorPlugin::_register_tool_schemas() {
 		{ Array req;
 		req.push_back("path");
 		schema["required"] = req; }
-		_tool_map["write_file"].input_schema = schema;
+		_tool_schemas["write_file"] = schema;
 	}
 
 }

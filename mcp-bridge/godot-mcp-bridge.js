@@ -14,7 +14,7 @@ function sendToHttp(jsonRequest) {
       hostname: url.hostname, port: parseInt(url.port) || 80, path: url.pathname || '/',
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'Content-Length': Buffer.byteLength(body) },
-      timeout: 30000
+      timeout: 60000
     }, (res) => {
       const chunks = [];
       res.on('data', c => chunks.push(c));
