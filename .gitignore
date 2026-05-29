@@ -1,0 +1,31 @@
+# Build logs
+build_log*.txt
+build_final*.txt
+
+# Test scripts (local use only)
+test_*.py
+analyze_failures.py
+
+# Binary (152MB, too large for GitHub)
+godot-mcp-editor.exe
+
+# CodeGraph index (local)
+.codegraph/
+
+# Python cache
+__pycache__/
+*.pyc
+
+# OS files
+Thumbs.db
+.DS_Store
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Temp
+*.tmp
+*.bak

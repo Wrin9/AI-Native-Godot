@@ -1,0 +1,23 @@
+{
+  "id": "godot-ai-native_c8e2a1f4",
+  "name": "AI-Native Godot",
+  "slug": "godot-ai-native",
+  "enabled": true,
+  "provider": "custom",
+  "type": "mcp",
+  "icon": "🎮",
+  "tagline": "AI-Native Godot 编辑器 - 为 MCP 优化的游戏开发引擎",
+  "mcp": {
+    "transport": "stdio",
+    "command": "node",
+    "args": ["F:/game/godot-ai-native/ai-bridge/bin/godot-ai-bridge.js"],
+    "env": {
+      "GODOT_MCP_URL": "ws://127.0.0.1:8765"
+    },
+    "authType": "none"
+  },
+  "isAuthenticated": true,
+  "connectionStatus": "disconnected",
+  "createdAt": 1748420000000,
+  "updatedAt": 1748420000000
+}
